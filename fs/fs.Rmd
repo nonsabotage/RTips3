@@ -1,0 +1,189 @@
+---
+title: "package:fs"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+
+# install package
+
+```{r setup, message=FALSE}
+config <- yaml::read_yaml("config.yaml")
+for (p in config$LIBS$CRAN) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p)
+  }
+  require(p, character.only = TRUE)
+}
+packageVersion("fs")
+```
+
+
+
+# intoroduction
+
+[fs](https://www.tidyverse.org/articles/2018/01/fs-1.0.0/)
+
+[develop version fs](https://github.com/r-lib/fs)
+
+クロスプラットホームのファイルシステム. 
+特徴は次の通り. 
+
+
+- すべての関数がベクター
+- 陽に失敗を知らせる
+- すべてUTF-8
+- fs_*というプレフィックスで名前が問う行く
+
+# Usage
+
+
+- path_ for manipulation
+- file_ for files
+- dir_ for directories
+- link_ for links
+
+
+```{r}
+# ファイルパスの作成はpathで行う
+path("foo", "bar", letters[1:3], ext = "txt")
+```
+
+
+```{r}
+# フォルダ内のファイルのリストアップ
+dir_ls()
+```
+
+
+```{r}
+# 一時フォルダの作成やファイルの作成
+tmp <- dir_create(file_temp())
+tmp
+```
+
+```{r}
+# 新しいファイルの作成
+file_create(path(tmp, "my-file", ext = "txt"))
+dir_ls(tmp)
+```
+
+```{r}
+# ファイルの削除
+file_delete(path(tmp, "my-file", ext = "txt"))
+dir_ls(tmp)
+dir_delete(tmp)
+```
+
+フォルダサイズなどの情報をリストアップできる. 
+注目して欲しいのは`size`変数. バイト型になっており, 
+**ファイルサイズの演算が可能**である. 
+
+```{r}
+dir_info(recursive = FALSE) %>%
+  select(path, permissions, size, modification_time)
+``` 
+
+# Functions
+
+```{r}
+objects("package:fs", pattern = "path_") %>% 
+  cat(sep="\n")
+```
+
+```{r}
+objects("package:fs", pattern = "dir_") %>% 
+  cat(sep="\n")
+```
+
+```{r}
+objects("package:fs", pattern = "file_") %>% 
+  cat(sep="\n")
+```
+
+
+# Test Case
+
+
+
+```{r}
+tmp_dir <- path_temp(); dir_create(tmp_dir)
+tmp_path <- path(tmp_dir, "hoge.txt")
+```
+
+## path
+
+```{r}
+path_dir(tmp_path)
+path_file(tmp_path)
+path_home(tmp_path)
+path_filter(tmp_path, glob = "*.txt")
+path_abs(tmp_path)
+path_ext(tmp_path) # 代入も可能
+path_ext_remove(tmp_path)
+# path_real(tmp_path)
+```
+
+
+
+
+```{r}
+path_split(tmp_path)
+```
+
+```{r}
+path_package("dplyr")
+```
+
+```{r}
+# 怪しい文字を無効化
+path_sanitize(">.txt")
+```
+
+```{r}
+path_expand("~")
+```
+
+
+```{r}
+path_norm("\\hoge\\a.txt")
+```
+
+```{r}
+path_join(
+  path_split(tmp_path)
+)
+```
+
+
+```{r}
+# 第２引数からの相対パスをつくる
+path_rel(tmp_path, "C:/Users")
+```
+
+
+## file
+
+```{r}
+file_create(tmp_path)
+```
+
+```{r}
+file_access(tmp_path)
+file_info(tmp_path)
+file_exists(tmp_path)
+```
+
+
+
+
+

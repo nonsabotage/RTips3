@@ -1,0 +1,4 @@
+LIBS:
+  CRAN:
+    - rlang
+    - tidyverse

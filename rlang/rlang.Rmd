@@ -1,0 +1,181 @@
+---
+title: "package:rlang"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+
+# Load library
+
+```{r setup, message=FALSE}
+config <- yaml::read_yaml("config.yaml")
+for (p in config$LIBS$CRAN) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p)
+  }
+  require(p, character.only = TRUE)
+}
+packageVersion("fs")
+```
+
+
+
+# Introduction
+
+- 文字列には`sym`
+- リテラルには`quo`, `enquo`
+
+# Usage
+
+## dplyr-recipes
+
+[Tidy evaluation, most common actions](https://edwinth.github.io/blog/dplyr-recipes/)
+
+
+### bare to quosure:quo
+
+```{r}
+bare_to_quo <- function(x, var) {
+  x %>%
+    select(!!var) %>%
+    head(1)
+}
+bare_to_quo(mtcars, quo(cyl))
+```
+
+### bare to quosure in function : enquo 
+
+```{r}
+bare_to_quo_in_func <- function(x, var) {
+  var_enq <- enquo(var)
+  x %>% 
+    select(!!var_enq) %>%
+    head(1)
+}
+bare_to_quo_in_func(mtcars, mpg)
+```
+
+### quosure to a name: quo_name
+
+```{r}
+bare_to_name <- function(x, nm) {
+  nm_name <- quo_name(nm)
+  x %>% 
+    mutate(!!nm_name := 42) %>% 
+    head(1) %>% 
+    select(!!nm)
+}
+bare_to_name(mtcars, quo(this_is_42))
+```
+
+```{r}
+test <- function (x, nm) {
+  quo_nm <- enquo(nm)
+  x %>% 
+    mutate(quo_nm := Sepal.Length + 10) %>% 
+    head(1)
+}
+test(iris, a)
+```
+
+
+### quosure to text: quo_text
+
+```{r}
+quo_to_text <- function(x, var) {
+  var_enq <- enquo(var)
+  glue::glue("The following column, was selected: {rlang::quo_text(var_enq)}")
+}
+quo_to_text(mtcars, cyl)
+```
+
+### character to name: sym
+
+```{r}
+char_to_quo <- function(x, var)  {
+  var_enq <- rlang::sym(var)
+  x %>% 
+    select(!!var_enq) %>% 
+    head(1)
+}
+char_to_quo(mtcars, "vs")
+```
+
+### multiple bares to quosure: quos
+
+```{r}
+bare_to_quo_mult <- function (x, ...) {
+  grouping <- quos(...)
+  x %>% 
+    group_by(!!!grouping) %>%
+    summarise(nr = n())
+}
+bare_to_quo_mult(mtcars, vs, cyl)
+```
+
+```{r}
+bare_to_quo_mult <- function (x, ...) {
+  grouping <- enquos(...)
+  x %>% 
+    group_by(!!!grouping) %>%
+    summarise(nr = n())
+}
+bare_to_quo_mult(mtcars, vs, cyl)
+```
+
+### multiple characters to names: syms
+
+```{r}
+bare_to_quo_mul_chars <- function (x, ...) {
+  grouping <- rlang::syms(...)
+  x %>% group_by(!!!grouping) %>% summarise(nr = n())
+}
+bare_to_quo_mul_chars(mtcars, list("vs", "cyl"))
+```
+```{r}
+bare_to_quo_mul_chars <- function (x, ...) {
+  grouping <- rlang::syms(list(...))
+  x %>% group_by(!!!grouping) %>% summarise(nr = n())
+}
+bare_to_quo_mul_chars(mtcars, "vs", "cyl")
+```
+
+
+### quoting full expression 
+
+
+
+```{r}
+filter_func <- function (x, filter_exp) {
+  filter_exp_enq <- enquo(filter_exp)
+  x %>% filter(!!filter_exp_enq)
+}
+filter_func(mtcars, hp == 93)
+```
+
+
+
+
+### quoting full expression in a character: parse_expr
+
+文字列をパースして表現式を扱うことが可能である. 
+
+
+```{r}
+filter_by_char <- function (x, char) {
+  func_call <- rlang::parse_expr(char); print(func_call)
+  x %>% filter(!!func_call) 
+}
+filter_by_char(mtcars, "cyl == 6") %>%  head(1)
+
+```
+
