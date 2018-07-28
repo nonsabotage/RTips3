@@ -1,0 +1,69 @@
+---
+title: "package:polite"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+
+# install package
+
+```{r setup, message=FALSE}
+config <- yaml::read_yaml("config.yaml")
+for (p in config$LIBS$CRAN) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p)
+  }
+  require(p, character.only = TRUE)
+}
+
+```
+
+
+
+# intoroduction
+
+[polite](https://github.com/dmi3kno/polite)
+
+
+
+## Basic Example
+
+```{r}
+library(rvest)
+
+session <- 
+  bow(
+    "https://www.cheese.com/by_type", 
+    force = TRUE
+  )
+session
+
+```
+
+```{r}
+result <-
+  scrape(
+    session, 
+    params="t=semi-soft&per_page=100") %>% 
+  html_nodes("h3") %>% 
+  html_text()
+head(result)
+```
+
+
+
+
+
+
+
+
+

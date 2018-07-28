@@ -1,0 +1,145 @@
+---
+title: "package:furrr"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+
+# install package
+
+```{r setup, message=FALSE}
+config <- yaml::read_yaml("config.yaml")
+for (p in config$LIBS$CRAN) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p)
+  }
+  require(p, character.only = TRUE)
+}
+```
+
+
+
+# intoroduction
+
+- [furrr@github](https://github.com/DavisVaughan/furrr)
+
+
+## Example
+
+通常の関数の場合にはsequential, 
+つまりparallelでない通常のmapと同じ処理が行われる. 
+そして処理が遅い. 
+
+
+```{r}
+library(furrr)
+library(purrr)
+
+
+hello_world <- c("hello", "world")
+
+mark(
+  map(hello_world, ~ .x), 
+  future_map(hello_world, ~.x)
+)
+```
+
+明示的にsequentialに実行をする場合には
+次ぎのように実施する. 
+
+```{r}
+library(tictoc)
+
+plan(sequential)
+tic()
+nothingness <- 
+  future_map(rep(2, 3),  ~ Sys.sleep(.x))
+toc()
+
+```
+
+並列に実施する場合には次のように行う. 
+
+```{r}
+plan(multiprocess)
+tic()
+nothingness <- 
+  future_map(rep(2, 3), ~ Sys.sleep(.x))
+toc()
+```
+
+## A more compelling user case
+
+
+```{r}
+data("attrition")
+names(attrition)
+```
+
+```{r}
+set.seed(4622)
+rs_obj <- vfold_cv(attrition, v = 20, repeats = 100)
+rs_obj
+```
+
+
+```{r}
+mod_form <-
+  as.formula(Attrition ~ JobSatisfaction + 
+              Gender + 
+              MonthlyIncome)
+```
+
+```{r}
+holdout_results <- function (splits, ...) {
+  mod <-
+    glm(
+      ..., 
+      data = analysis(splits), 
+      family = binomial)
+  holdout <- assessment(splits)
+  res <- broom::augment(mod, newdata = holdout)
+  lvls <- levels(holdout$Attrition)
+  predictions <- 
+    factor(
+      ifelse(res$.fitted > 0, lvls[2], lvls[1]),
+      levels = lvls
+    )
+  res$correct <- predictions == holdout$Attrition
+  
+  res
+}
+```
+
+```{r}
+tic()
+rs_obj$results <- 
+  map(rs_obj$splits, holdout_results, mod_form)
+toc()
+```
+
+```{r}
+plan(multiprocess)
+
+tic()
+rs_obj$results <- 
+  future_map(
+    rs_obj$splits, 
+    holdout_results, 
+    mod_form
+  )
+toc()
+```
+
+
+
+
