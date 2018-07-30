@@ -1,0 +1,396 @@
+---
+title: "package:stringr"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+
+# Load library
+
+```{r setup, message=FALSE}
+config <- yaml::read_yaml("config.yaml")
+for (p in config$LIBS$CRAN) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p)
+  }
+  require(p, character.only = TRUE)
+}
+```
+
+
+# Regula expression
+
+Source: `vignettes/regular-expressions.Rmd`
+
+
+stringrの正規表現はstringiパッケージで実装されている. 
+正規表現について詳細を知りたい場合には
+「詳細 正規表現」を参照してもらいたい. 
+
+正規表現は生の文字列であっても, `regex`でラップされているのと等しい. 
+`regex`を使うのは標準オプションでないときである. 
+
+```{r}
+str_extract(fruit, "nana")
+str_extract(fruit, regex("nana"))
+```
+
+## Basic matches
+
+
+```{r}
+x <- c("apple", "banana", "pear")
+str_extract(x, "an")
+```
+
+`regex`を使うことで大文字についても
+参照するオプションに変更が可能. 
+
+```{r}
+bananas <- c("banana", "Banana", "BANANA")
+str_detect(bananas, "banana")
+str_detect(bananas, regex("banana", ignore_case = TRUE))
+```
+
+`.`は全ての文字にマッチする. 
+
+```{r}
+str_extract(x, ".a.")
+str_extract(bananas, ".a.")
+```
+
+改行文字にマッチさせることも可能である. 
+
+```{r}
+str_detect("\nX\n", ".X.")
+str_detect("\nX\n", regex(".X.", dotall=TRUE))
+```
+
+
+## Escaping
+
+`.`自体にマッチさせるにはエスケープが必要である. 
+ただ`\`そのものをエスケープさせる必要もあるため, `.`という
+文字にマッチさせるには`\\.`という正規表現を使う必要がある. 
+
+```{r}
+# To create the gregular expression, we need
+dot <- "\\."
+
+# But the expression itself only contains one:
+writeLines(dot)
+
+# And this tells R to look for an explicit
+str_extract(c("abc", "a.c", "bef"), "a\\.c")
+
+
+
+```
+
+
+これはつまり, `\`をマッチさせるにはエスケープ用の文字と, 
+文字としての`\`が必要であるため次ぎのようになる. 
+
+
+
+```{r}
+x <- "a\\b"
+writeLines(x)
+
+str_extract(x, "\\\\")
+```
+
+その他のクォートマッチの方法には`\Q...\E`がある. 
+これは...を正確に一致させる. 
+
+```{r}
+x <- c("a.b.c.d", "aeb")
+starts_with <- "a.b"
+
+
+str_detect(x, paste0("^", starts_with))
+str_detect(x, paste0("^\\Q", starts_with, "\\E"))
+```
+
+
+
+## Special characters
+
+- `xhh`:2 hex digits
+- `x{hhhh}`: 1-6hex digits
+- `uhhhh`: 4 hex digits
+- `Uhhhhhhh`: 8 hex digits
+- `\N{name} like \N{grinning face}`は絵文字にマッチする
+
+
+他にもコントロール文字にマッチさせることも可能である. 
+
+
+- `\a`: bell.
+- `\c`X: match a control-X character.
+- `\e`: escape (\u001B).
+- `\f`: form feed (\u000C).
+- `\n`: line feed (\u000A).
+- `\r`: carriage return (\u000D).
+- `\t`: horizontal tabulation (\u0009).
+- `\0ooo` match an octal character. ‘ooo’ is from o
+
+
+
+
+## Matiching multiple characters
+
+
+```{r}
+# grapheme cluster
+x <- "a\u0301"
+str_extract(x, ".")
+
+str_extract(x, "\\X")
+```
+
+
+`\d`は数字にマッチする. ちなみにだが`\d`はユニコードで規定された
+他の言語の数字表現にもマッチする. 
+
+```{r}
+str_extract_all("1 + 2 = 3", "\\d+")[[1]]
+```
+
+
+
+`\s`はホワイトスペースにどれでもマッチする. 
+もちろんタブや改行なども. 
+
+```{r}
+(text <- "Some \t badly\n\ttspaced \f text")
+str_replace_all(text, "\\s+", " ")
+```
+
+
+`\p{property name}`はユニコードのプロパティネームでマッチさせる. 
+
+```{r}
+(text <- c('"Double quotes"', "<<Guillemet>>", "`Fancy quotes`"))
+str_replace_all(text, "\\p{quotation mark}", "'")
+```
+
+
+
+`\w`はワードにマッチ. `\W`はワード以外にマッチする. 
+
+```{r}
+str_extract_all("Dont't eat that!", "\\w+")[[1]]
+str_split("Don't eat that!", "\\W+") # ワード文字以外で分割を行う
+```
+
+`\b`はワードのバウンダリーにマッチ?
+
+```{r}
+str_replace_all("The quick brown fox", "\\b", "_")
+str_replace_all("The quick brown fox", "\\B", "_")
+```
+
+**character classes**という角括弧をつかった記法もある. 
+
+- `[abc]`: matches, a, b, or c
+- `[a-z]`: matches, a, b, ..., z
+- `[^abc]`: matches nything except a, b, or c
+- `[\^\-]`: matches ^ or -.
+
+
+キャラクタークラスにはプレビルドされているのも多い. 
+
+- `[:punct:]`: punctuation.
+- `[:alpha:]`: letters.
+- `[:lower:]`: lowercase letters.
+- `[:upper:]`: upperclass letters.
+- `[:digit:]`: digits.
+- `[:xdigit:]`: hex digits.
+- `[:alnum:]`: letters and numbers.
+- `[:cntrl:]`: control characters.
+- `[:graph:]`: letters, numbers, and punctuation.
+- `[:print:]`: letters, numbers, punctuation, and whitespace.
+- `[:space:]`: space characters (basically equivalent to \s).
+- `[:blank:]`: space and tab.
+
+
+キャラクタークラスをさらに,　キャラクタークラスにしても大丈夫. 
+
+```{r}
+x <- "hoge12l4AX"
+
+# 数値とA, Xにマッチする記法
+str_extract_all(x, "[[:digit:]AX]")
+```
+
+## Alternation
+
+`|`を使うことで「又は」を表現する琴が可能である. 
+
+
+
+## Grouping
+
+（）を使うことで標準記法を上書き出来る. 
+
+```{r}
+str_extract(c("gray", "grey"), "gre|ay")
+str_extract(c("gray", "grey"), "gr(e|a)y")
+```
+
+（）はグループを作る. それ自身を参照可能な形で. 
+
+```{r}
+# 任意の２文字が連続するパターン
+pattern <- "(..)\\1"
+fruit %>%
+  str_subset(pattern)
+
+# パターンの取り出し
+fruit %>%
+  str_subset(pattern) %>%
+  str_match(pattern)
+```
+
+`(?:...)`を使うことでグループ化しない（）として使うことができる. 
+
+```{r}
+str_match(c("grey", "gray"), "gr(e|a)y")
+str_match(c("grey", "gray"), "gr(?:e|a)y")
+```
+
+
+## Anchors
+
+標準では正規表現は文字列のあらゆる部分とマッチする. 
+しかし, しばしばアンカー表現を使うことでより有用となる.
+
+```{r}
+x <- c("apple", "banana", "pear")
+str_extract(x, "^a")
+str_extract(x, "a$")
+```
+
+複数行に対しては少し勝手が異なるのに注意をする. 
+
+- `^`: now matches the start of each line
+- `$`: noew matches the end of each line
+- `\A`: matches the start of the input
+- `\z`: matches the end of the input
+- `\Z`: matches the end of the input, but before the final line terminator, if exists
+
+
+
+```{r}
+x <- "Line 1\nLine 2\nLine 3\n"
+str_extract_all(x, "^Line..")[[1]]
+str_extract_all(x, regex("^Line..", multiline = TRUE))[[1]]
+str_extract_all(x, regex("\\ALine..", multiline = TRUE))[[1]]
+```
+
+
+
+## Repetition
+- `?`: 0 or 1
+- `+`: 1 or more
+- `*`: 0 or more
+
+```{r}
+x <- "1880 is the longest year in Roman numerals: MDCCCLXXXVIII"
+str_extract(x, "CC?")
+str_extract(x, "CC+")
+str_extract(x, "C[LX]+")
+```
+
+
+
+よく使うのはアメリカ英語とイギリス英語の違いで
+`colou?r`を表現することが多い. もしくは（）を使うことで
+グループ化した文字の繰り返しがある. 
+
+```{r}
+str_extract(x, "C{2}")
+str_extract(x, "C{2,}")
+str_extract(x, "C{2,3}")
+```
+
+遅延評価も可能である. **最小マッチ**なども可能である.
+
+- `??`: 0 or 1, prefer 0
+- `+?`: 1 or more, matches as few times as possible
+- `*?`: 0 or more, matches as few times as possible
+- `{n,}?`: n or more, match as few tiems as possible
+- `{n,m}?`: between n and m, match as few times as possible, but at least n
+
+```{r}
+str_extract(x, c("C{2,3}", "C{2,3}?"))
+str_extract(x, c("C[LX]+", "C[LX]+?"))
+```
+
+**最大マッチ**を探すには上記の`?`を`+`に変更するだけでよい.
+
+- `+?`: 0 or 1, possesive
+- `++`: 1 or more, possesive
+- `*+`: 0 or more, possesive
+- `{n,}+`: n or more, possesive
+- `{n,m}+`: between n and m, possesive
+
+
+そのほかの関連知識として`atomic-match`がある.
+ACで失敗したときに, BCでマッチを試みてくれる.
+`>`と`:`の違いは前からマッチを試みてくれるか, 後方からマッチを
+試みてくれるのかの違いに見える. 
+
+```{r}
+str_detect("ABC", "(?>.B|A)C")
+str_detect("ABC", "(?:D|T)C")
+str_detect("ABC", "(?:D|B)C")
+str_detect("ABC", "(?>T|D)C")
+str_detect("ABC", "(?>B|D)C")
+str_detect("ABC", "(?:B|D)C")
+str_detect("ABC", "(?>.B|T)C")
+str_detect("ABC", "(?>T|.B)C")
+str_detect("ABC", "(?:T|.B)C")
+str_detect("ABC", "(?:A|.B)C")
+str_detect("ABC", "(?>A|.B)C")
+```
+
+
+## Look arounds
+
+- `(?=...)`: ...がマッチするという条件付きになる
+- `(?!...)`: ...がマッチしないときという条件付きとなる
+- `(?<=...)`: よくわからん
+- `(?<!...)`: よくわからん
+
+```{r}
+x <- c("1 piece", "2 pieces", "3")
+str_extract(x, "\\d+(?= pieces?)")
+
+y <- c("100", "$400")
+str_extract(y, "(?<=\\$)\\d+")
+str_extract(y, "(?<!\\$)\\d+")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

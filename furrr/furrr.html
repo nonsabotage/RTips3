@@ -301,11 +301,11 @@ hello_world &lt;-<span class="st"> </span><span class="kw">c</span>(<span class=
   <span class="kw">future_map</span>(hello_world, <span class="op">~</span>.x)
 )</code></pre></div>
 <pre><code>## # A tibble: 2 x 10
-##   expression     min   mean median     max `itr/sec` mem_alloc  n_gc n_itr
-##   &lt;chr&gt;      &lt;bch:t&gt; &lt;bch:&gt; &lt;bch:&gt; &lt;bch:t&gt;     &lt;dbl&gt; &lt;bch:byt&gt; &lt;dbl&gt; &lt;int&gt;
-## 1 map(hello~ 73.39us   96us 80.2us 925.6us   10420.     3.35KB     2  5070
-## 2 future_ma~  8.26ms 12.3ms 10.6ms  28.7ms      81.5     4.7MB     1    39
-## # ... with 1 more variable: total_time &lt;bch:tm&gt;</code></pre>
+##   expression     min    mean  median     max `itr/sec` mem_alloc  n_gc
+##   &lt;chr&gt;      &lt;bch:t&gt; &lt;bch:t&gt; &lt;bch:t&gt; &lt;bch:t&gt;     &lt;dbl&gt; &lt;bch:byt&gt; &lt;dbl&gt;
+## 1 map(hello~ 103.5us   122us 113.2us 440.3us    8199.     3.35KB     2
+## 2 future_ma~  12.5ms  16.2ms  16.1ms  20.8ms      61.6    4.72MB     1
+## # ... with 2 more variables: n_itr &lt;int&gt;, total_time &lt;bch:tm&gt;</code></pre>
 <p>明示的にsequentialに実行をする場合には 次ぎのように実施する.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(tictoc)
 
@@ -321,7 +321,7 @@ nothingness &lt;-<span class="st"> </span>
 nothingness &lt;-<span class="st"> </span>
 <span class="st">  </span><span class="kw">future_map</span>(<span class="kw">rep</span>(<span class="dv">2</span>, <span class="dv">3</span>), <span class="op">~</span><span class="st"> </span><span class="kw">Sys.sleep</span>(.x))
 <span class="kw">toc</span>()</code></pre></div>
-<pre><code>## 7.47 sec elapsed</code></pre>
+<pre><code>## 9.35 sec elapsed</code></pre>
 </div>
 <div id="a-more-compelling-user-case" class="section level2">
 <h2>A more compelling user case</h2>
@@ -377,7 +377,7 @@ rs_obj</code></pre></div>
 rs_obj<span class="op">$</span>results &lt;-<span class="st"> </span>
 <span class="st">  </span><span class="kw">map</span>(rs_obj<span class="op">$</span>splits, holdout_results, mod_form)
 <span class="kw">toc</span>()</code></pre></div>
-<pre><code>## 28.9 sec elapsed</code></pre>
+<pre><code>## 36.64 sec elapsed</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plan</span>(multiprocess)
 
 <span class="kw">tic</span>()
@@ -388,7 +388,7 @@ rs_obj<span class="op">$</span>results &lt;-<span class="st"> </span>
     mod_form
   )
 <span class="kw">toc</span>()</code></pre></div>
-<pre><code>## 27.04 sec elapsed</code></pre>
+<pre><code>## 27.5 sec elapsed</code></pre>
 </div>
 </div>
 

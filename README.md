@@ -8,4 +8,5 @@ Rのパッケージに関するノート
 - [rlang](rlang/rlang.html)
 - [polite](polite/polite.html)
 - [furrr](furrr/furrr.html)
+- [stringr](stringr/stringr.html)
 
