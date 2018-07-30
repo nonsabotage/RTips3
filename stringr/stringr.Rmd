@@ -366,6 +366,22 @@ str_detect("ABC", "(?>A|.B)C")
 ```
 
 
+なるほどわからん.
+
+
+```{r}
+
+x <- "(a+b()"
+
+# normal version
+str_extract(x, "^\\([^()]+\\)")
+
+# backtracking version
+str_extract(x, regex("^\\((?>[^()]+)\\)"))
+
+```
+
+
 ## Look arounds
 
 - `(?=...)`: ...がマッチするという条件付きになる
