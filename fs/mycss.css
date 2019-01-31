@@ -35,13 +35,14 @@ ul, ol, p {
     padding-left: 15px;
 }
 ul, ol {
-  color: #1256A4;
-  padding: 0.5em 0 0.5em 1.5em;
+  color: #1e366a;
+  border: dotted #1e366a 1px;
+  padding: 0.5em 0.5em 0.5em 2em;
 }
 
 ul li, ol li {
   line-height: 1.5;
-  list-style: disc;
+  padding: 0.5em 0;
 }
 strong {
   color: red;
@@ -61,6 +62,7 @@ h1 {
     margin-top: 3em;
     margin-bottom: 0.5em;
     border-bottom: solid 5px #1256A4;
+    border-top: solid 5px #1256A4;
     color: black;
     background-color: white;
 }
@@ -190,8 +192,8 @@ ul.tocify-header, ul.tocify-subheader {
   font-size: 13px;
 }
 li.list-group-item.active {
-  background-color: #F26964;
+  background-color: #1256A4;
 }
 li.list-group-item.active:hover {
-  background-color: #F26964;
+  background-color: #1256A4;
 }

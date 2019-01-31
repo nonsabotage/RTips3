@@ -68,9 +68,11 @@ toc()
 ```
 
 並列に実施する場合には次のように行う. 
+OSによってplanが異なるのに注意.　
+Windowsではmultisessionとすることで並列処理が可能となる
 
 ```{r}
-plan(multiprocess)
+plan(multisession)
 tic()
 nothingness <- 
   future_map(rep(2, 3), ~ Sys.sleep(.x))
@@ -128,7 +130,7 @@ toc()
 ```
 
 ```{r}
-plan(multiprocess)
+plan(multisession)
 
 tic()
 rs_obj$results <- 

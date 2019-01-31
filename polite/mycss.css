@@ -23,7 +23,7 @@ p {
     margin-bottom: 1em;
     margin-top: 2em;
 }
-p + p{
+p + p {
     margin-bottom: 1em;
     margin-top: 0.5em;
 }
@@ -35,13 +35,14 @@ ul, ol, p {
     padding-left: 15px;
 }
 ul, ol {
-  color: #1256A4;
-  padding: 0.5em 0 0.5em 1.5em;
+  color: #1e366a;
+  border: dotted #1e366a 1px;
+  padding: 0.5em 0.5em 0.5em 2em;
 }
 
 ul li, ol li {
   line-height: 1.5;
-  list-style: disc;
+  padding: 0.5em 0;
 }
 strong {
   color: red;
@@ -60,7 +61,8 @@ h1 {
     padding: 0.5em;
     margin-top: 3em;
     margin-bottom: 0.5em;
-    border-bottom: solid 5px #1256A4;
+    border-bottom: solid 2px black;
+    border-top: solid 2px black;
     color: black;
     background-color: white;
 }
@@ -72,12 +74,13 @@ h1.title {
   border: solid 0px white;
 }
 h2 {
-  border-left:#1253A4 7px solid;
+  border-left: black 4px solid;
   padding:5px;
   padding-left:20px;
   padding-bottom: 0.5em;
   margin-bottom: 0.5em;
   margin-top: 1.5em;
+  margin-left: 1px;
   font-size: 28px;
   color: black;
 }
@@ -89,8 +92,11 @@ h3 {
     padding-left: 15px;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
+    font-size: 24px;
 }
 h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
   padding-left: 15px;
 }
 li.ist-group-iteml.active {
@@ -190,8 +196,8 @@ ul.tocify-header, ul.tocify-subheader {
   font-size: 13px;
 }
 li.list-group-item.active {
-  background-color: #F26964;
+  background-color: black;
 }
 li.list-group-item.active:hover {
-  background-color: #F26964;
+  background-color: black;
 }

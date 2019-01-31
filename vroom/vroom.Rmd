@@ -1,0 +1,118 @@
+---
+title: "package:vroom"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+update`r Sys.time()`
+
+
+# はじめに
+
+
+[vroom](https://github.com/jimhester/vroom)
+パッケージではデータの実態ではなく, 
+インデックスを作成するため読み込みが爆速らしい. 
+つまり読み込みそのものではなく使う段になって, はじめて実態を作成する. 
+ここではcsvの読み込みの速度実験をしてみる. 
+また読み込み後の各種操作も試してみる. 
+
+
+# 実験
+
+## データの読み込み
+
+```{r}
+libs <- c ("fs", "vroom", "readr", "bench", "tidyverse", "here")
+for (lib in libs) {
+    library(lib, character.only = TRUE)
+}
+```
+
+
+### 読み込みのテスト
+
+```{r message=FALSE}
+
+target_file <- here("vroom", "dat", "wd_case01a_17.csv")
+
+system_time({rr = readr::read_csv(target_file, locale = locale(encoding = "cp932"), skip = 1, col_names = FALSE )})
+rr
+
+system_time({vr = vroom::vroom(target_file, delim = ",", skip = 1, col_names = FALSE)})
+vr
+
+```
+
+
+### 読み込み速度の比較
+
+
+
+```{r message=FALSE, cache=TRUE}
+target_file <- here("vroom", "dat", "wd_case09a_06.csv")
+file_info(target_file)
+
+bench::mark(
+    rr = readr::read_csv(target_file, locale = locale(encoding = "cp932"), skip = 1, col_names = FALSE ),
+    vr = vroom::vroom(target_file, delim = ",", skip = 1, col_names = FALSE), 
+    check = FALSE)
+
+```
+
+
+### データ処理速度の比較
+
+```{r message=FALSE}
+rr = readr::read_csv(target_file, locale = locale(encoding = "cp932"), skip = 1, col_names = FALSE)
+vr = vroom::vroom(target_file, delim = ",", skip = 1, col_names = FALSE)
+
+object.size(rr)
+object.size(vr)
+
+```
+
+```{r}
+bench::mark(
+    rr = head(rr),
+    vr = head(vr), 
+    check = FALSE)
+
+```
+
+
+```{r}
+bench::mark(
+    rr = tail(rr),
+    vr = tail(vr), 
+    check = FALSE)
+
+```
+
+```{r}
+bench::mark(
+    rr = dplyr::filter(rr, between(X4, 5000, 8000)),
+    vr = dplyr::filter(vr, between(X4, 5000, 8000)), 
+    check = FALSE)
+
+```
+
+
+# まとめ
+
+ざっと使った印象としては確かに早いが，読み込みに柔軟性がない．
+本当にキレイで大きいデータに対して有効であるというところか．
+
+
+
+
+

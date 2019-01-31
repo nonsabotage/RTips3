@@ -1,0 +1,188 @@
+---
+title: "package:gganimate"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+update`r Sys.time()`
+
+
+# はじめに
+
+
+[gganimate](https://github.com/thomasp85/gganimate)では
+ggplot2の記法でアニメーションを作成することが可能である. 
+具体的には次の記法を提供している. 
+
+- `transition_*()`
+- `view_*()`
+- `shadow_*()`
+- `enter_*() / exit_*()`
+- `ease_aes`
+
+
+
+# 実験
+
+## Example
+
+### transition sate
+
+離散的な状態を連続的に表現する方法. 
+facet_wrapに近く，表現している軸とは別の軸で連続的に
+フレームを変化させていく. 
+
+```{r cache=TRUE}
+library(ggplot2)
+library(gganimate)
+library(gifski)
+library(tidyverse)
+
+
+ggplot(mtcars, aes(factor(cyl), mpg)) + 
+    geom_boxplot(aes(colour = factor(gear))) + 
+    transition_states(
+        gear, 
+        transition_length = 2,  # 変化にかかる相対時間
+        state_length = 1 # ある状態を止めておく相対長さ
+    ) + 
+    enter_fade() + 
+    exit_shrink() + 
+    ease_aes('sine-in-out')
+```
+
+### transition filter
+
+フィルタをいろいろと設定して，
+そのフィルタを適用した状態を表現していく方法.
+あまりtransition_length, filter_lengthの使い方がわからない...．
+おそらくアニメーションに係る時間の設定だとは思うが．
+
+
+```{r cache =TRUE}
+ ggplot(iris, aes(Petal.Width, Petal.Length, colour = Species)) +
+     geom_point() +
+     transition_filter(
+         transition_length = 2,
+         filter_length = 1,
+         Setosa = Species == 'setosa',
+         Long = Petal.Length > 4,
+         Wide = Petal.Width > 2
+     ) +
+     ggtitle(
+         'Filter: {closest_filter}',
+         subtitle = '{closest_expression}'
+     ) +
+     enter_fade() +
+     exit_fly(y_loc = 0)
+```
+
+### transition time
+
+
+```{r cache=TRUE}
+# Removing a time point will prolong the tweening between neighbouring time
+# points so the time dimension stays linear
+airquality_missing <- airquality[airquality$Day <= 10 | airquality$Day >= 20, ]
+anim1 <- ggplot(airquality_missing, aes(Day, Temp)) +
+  geom_point(aes(colour = factor(Month))) +
+  transition_time(Day)
+
+anim1
+```
+
+### transition reveal
+
+どうやらtrnasition_timeはちゃんとした
+時系列データでないとだめなようだ．
+適当な$x$軸に対してはtransition_revealを使う.
+
+
+```{r}
+anim <- ggplot(airquality, aes(Day, Temp, group = Month)) +
+  geom_line() +
+  transition_reveal(Day)
+anim
+```
+
+
+```{r}
+# Points can be kept by giving them a unique group and set `keep = TRUE` (the
+# default)
+anim2 <- ggplot(airquality, aes(Day, Temp, group = Month)) +
+  geom_line() +
+  geom_point(aes(group = seq_along(Day))) +
+  geom_point(colour = 'red', size = 3) +
+  geom_text(aes(label = Month), size = 15) + 
+  transition_reveal(Day) + 
+  geom_line()
+anim2
+```
+
+### transition layer
+
+
+
+
+
+### transition components
+
+なんとなくわかるんだけど，正直わからない．
+わからないとは言いたくないのだけれども，正直わからない．
+眠いのからだとは思うが…
+
+```{r cache=TRUE}
+data <- data.frame(
+  x = runif(10),
+  y = runif(10),
+  size = sample(1:3, 10, TRUE),
+  time = c(1, 4, 6, 7, 9, 6, 7, 8, 9, 10),
+  id = rep(1:2, each = 5)
+)
+
+ggplot(data, aes(x, y, group = id, size = size)) +
+  geom_point() +
+  transition_components(time, range = c(4, 8))
+
+```
+
+```{r}
+ ggplot(data, aes(x, y, group = id, size = size)) +
+  geom_point() +
+  transition_components(time, enter_length = 2, exit_length = 2) +
+  enter_grow() +
+  exit_fade()
+```
+
+
+
+
+
+
+
+
+## 周期関数の2次元軌跡
+
+### データ
+
+
+### 位相差0
+
+### 位相差45度
+
+### 位相差90度
+
+
+# まとめ
+
+
+

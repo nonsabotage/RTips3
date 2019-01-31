@@ -1,0 +1,387 @@
+---
+title: "package:assertr"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+
+# Load library
+
+```{r setup, message=FALSE}
+config <- yaml::read_yaml("config.yaml")
+for (p in config$LIBS$CRAN) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p)
+  }
+  require(p, character.only = TRUE)
+}
+```
+
+
+# assertr
+
+アサートを行うパッケージである. 
+`stopifnot`と異なり評価が成功する場合には, invisibleで引数を返すため, 
+パイプの中で連続した処理が可能となる. 
+
+データ分析のおいてはデータが適当であるのかについては常に注意が必要である. 
+特にデータを書き出しを伴う時には余計な変更が伴うことがある. 
+注意が必要. 
+
+下記は参行文献である. 
+
+- [アサートを使って堅牢なデータ設計をしよう](https://uribo.hatenablog.com/entry/2016/03/19/110000)
+- [viggnet](https://cran.r-project.org/web/packages/assertr/vignettes/assertr.html)
+
+
+# Example
+
+## objects
+
+- assert:
+  - メインとなる関数
+  - 関数を使い評価
+- assert_
+- assert_rows
+  - 行ごとにassertを適用
+- assert_rows_
+- chain_end
+  - catch-finalyと同じ操作イメージ
+- chain_start
+  - chain_startとセット
+- col_concat
+  - 行ごとに結合
+- error_append
+  - error_df_return
+- error_logical
+- error_report
+- error_return
+- error_stop
+- has_all_names
+- in_set
+  - 引数が集合に含まれているのかを確認
+- insist
+  - 動的に条件を生成したもので評価
+  - select系の表現式
+- insist_
+- insist_rows
+- insist_rows_
+- is_uniq
+- just_warn
+- maha_dist
+- not_na
+- num_row_NAs
+- success_continue
+- success_logical
+- verify
+- warn_report
+- within_bounds
+- within_n_mads
+  - 平均値からn絶対中央偏差以内
+- within_n_sds
+  - 平均値からn標準偏差以内
+
+
+## Example
+
+### assert
+
+```{r}
+our_data <- mtcars
+our_data$mpg[5] <- our_data$mpg[5] * -1
+our_data[4:6,]
+```
+
+
+```{r}
+our_data %>% 
+  group_by(cyl) %>% 
+  summarise(avg_mpg = mean(mpg))
+```
+
+`verfiy`は第1引数にデータフレームを取り,
+そのデータフレームをスコープにして第2引数を評価する. 
+Error: assertrが起きて処理が停止してくれる.　
+verifyには論理値を返す評価式を与える. 
+```{r}
+
+our_data %>% 
+  verify(mpg >= 0, error_fun = just_warn) %>% 
+  group_by(cyl) %>% 
+  summarise(avg_mpg = mean(mpg)) 
+```
+
+
+同じことを`assert`で行うことが可能である. 
+
+```{r}
+our_data %>% 
+  assert(within_bounds(0, Inf), mpg, error_fun = just_warn) %>% 
+  group_by(cyl) %>% 
+  summarise(avg_mpg = mean(mpg))
+```
+
+assertでは与えた関数を全ての列に対して評価を行う. 
+このとき関数で評価する変数は**dplyr::select**と同じ構文を使い指定すること
+が可能である. 
+```{r}
+our_data %>% 
+  assert(within_bounds(0, Inf, include.lower=FALSE, -mpg), error_fun = just_warn) %>% 
+  group_by(cyl) %>% 
+  summarise(avg_mpg = mean(mpg))
+```
+
+
+
+### verify vs. assert
+
+`verify`は表現式を取るが, `assert`は関数を取り, それをカラムに適用する. 
+行数を確認するなどデータ全体に関する条件は, 
+`verfiy`を活用するのが良い. 
+
+
+
+### asserts's predicates
+
+- not_na: that checks if an element is not NA
+- within_bounds: that resutns a predicate function that checks if a numeric value falls within the bounds supplied
+- in_set: that retuns a predicate function that checks if an element is a member of the set supplied
+- is_uniq that checks to see if each element apperars only once
+
+### custom predicates
+
+
+assetrは自分で叙述を定義できる. 
+
+```{r}
+not.empty.p <- function (x) if(x=="") return (FALSE)
+iris %>% 
+  assert(not.empty.p)
+```
+```{r }
+# 有効数字が7桁であることを確認する
+seven.digit.p <- function(x) nchar(x) == 7
+iris %>% 
+  assert(seven.digit.p, Sepal.Length, error_fun = just_warn)
+```
+
+### enter insist and predicate 'generators'
+
+動的に叙述を作成したい場合には, `insist`と`predicate generatros`を利用する. 
+
+`witiin_n_sds(3)`は平均値から3標準偏差以内だと, 
+TRUEを返す`predicate`のジェネレータ. madに変更すれば中央絶対偏差が活用できる. 
+
+```{r}
+mtcars %>% 
+  insist(within_n_sds(3), mpg) %>% 
+  group_by(cyl) %>% 
+  summarise(avg_mpg = mean(mpg))
+```
+```{r}
+within_n_mads(3)(iris$Sepal.Length)
+```
+
+
+### row-wise assertions and row reduction functions
+
+行ごとにassertを適用する. 
+サンプルデータとして, 1つだけ以上値を含んだデータを用意した. 
+
+```{r}
+example_data <- 
+  data_frame(
+    x=c(8, 9, 6, 5, 9, 5, 6, 7, 8, 9, 6, 5, 5, 6, 7),
+    y=c(82, 91, 61, 49, 40, 49, 57, 74, 78, 90, 61, 49, 51, 62, 68))
+example_data %>% 
+  ggplot() + 
+  geom_point(aes(x, y), size = 3, alpha=.3) + 
+  theme_classic()
+```
+
+
+標準化されたマハラノビス距離を見る. 
+
+```{r}
+md <- maha_dist(example_data)
+```
+
+```{r}
+example_data %>% 
+  insist_rows(
+    maha_dist, within_n_mads(3), dplyr::everything(), error_fun = just_warn)
+```
+
+
+`assert_rows`も`insist_rows`と同様の挙動を示す. 
+
+```{r}
+iris %>% num_row_NAs()
+```
+
+```{r}
+assert_rows(iris, num_row_NAs, within_bounds(0,2), dplyr::everything())
+```
+
+
+### success and error functions
+
+実はここまでに紹介した`assert`などの関数では, 
+`success_fun`と`error_fun`がそれぞれ指定されていた. 
+
+- success_fun
+  - success_continue
+  - success_logical: return TRUE
+- error_fun
+  - error_stop
+  - error_report
+  - error_append
+  - error_logical
+  - jsut_warn
+  - warn_report
+
+### combining chains of assertions
+
+
+
+通常のassertでは, 最初にエラーが出たところから先の評価が
+行われない.
+
+```{r}
+mtcars %>%
+  verify(has_all_names("mpg", "vs", "am")) %>%
+  verify(nrow(mtcars) > 10) %>%
+  verify(mpg > 0) %>%
+  insist(within_n_sds(4), mpg) %>%
+  assert(in_set(0,1), am, vs) %>%
+  group_by(cyl) %>%
+  summarise(avg.mpg=mean(mpg))
+```
+
+次のようにすれば全てが評価される. 
+
+```{r}
+mtcars %>%
+  chain_start %>%
+  verify(nrow(mtcars) > 10) %>%
+  verify(mpg > 0) %>%
+  insist(within_n_sds(4), mpg) %>%
+  assert(in_set(0,1), am, vs) %>%
+  chain_end %>%
+  group_by(cyl) %>%
+  summarise(avg.mpg=mean(mpg))
+```
+
+assert chainは関数にすることも可能. 
+```{r}
+check_me <- . %>%
+  chain_start %>%
+  verify(nrow(mtcars) > 10) %>%
+  verify(mpg > 0) %>%
+  insist(within_n_sds(4), mpg) %>%
+  assert(in_set(0,1), am, vs)
+  chain_end 
+
+mtcars %>%
+  check_me %>%
+  group_by(cyl) %>%
+  summarise(avg.mpg=mean(mpg))
+```
+
+
+応用してエラーの場合にはメールを送信するようにする. 
+
+```{r eval=FALSE}
+library(mailR)
+
+email_me <- function(list_of_errors, data=NULL, ...){
+  # we are checking to see if there are any errors that
+  # are still attached to the data.frame
+  if(!is.null(data) && !is.null(attr(data, "assertr_errors")))
+    errors <- append(attr(data, "assertr_errors"), errors)
+
+  num.of.errors <- length(list_of_errors)
+
+  preface <- sprintf("There %s %d error%s:\n",
+                     ifelse(num.of.errors==1,"is", "are"),
+                     num.of.errors,
+                     ifelse(num.of.errors==1,"", "s"))
+
+  # all `assertr_error` S3 objects have `print` and `summary` methods
+  # here, we will call `print` on all of the errors since `print`
+  # will give us the complete/unabridged error report
+  error_string <- capture.output(tmp <- lapply(list_of_errors,
+                                               function(x){
+                                                 cat("\n- ");
+                                                 print(x);
+                                                 return();}))
+  error_string <- c(preface, error_string)
+  error_string <- error_string %>% paste0(collapse="\n")
+
+  send.mail(from="assertr@gmail.com", to="nonsabotage@gmail.com",
+            subject="error from assertr", body=error_string,
+            smtp = list(host.name="aspmx.l.google.com", port=25),
+            authenticate = FALSE, send=TRUE)
+  stop("assertr stopped execution", call.=FALSE)
+}
+
+mtcars %>%
+  chain_start %>%
+  verify(nrow(.) > 10) %>%
+  insist(within_n_sds(1), mpg) %>%
+  # ...
+  chain_end(error_fun=email_me)
+```
+
+
+
+### creating your onwn predicaet generators for insist
+
+```{r}
+within_3_iqrs <- function(a_vector){
+  the_median <- median(a_vector)
+  the_iqr <- IQR(a_vector)
+  within_bounds((the_median-the_iqr*3), (the_median+the_iqr*3))
+}
+mtcars %>%
+  insist(within_3_iqrs, mpg, error_fun=just_warn) %>%
+  group_by(cyl) %>%
+  summarise(avg.mpg=mean(mpg))
+```
+```{r}
+within_n_iqrs <- function(n, ...){
+  function(a_vector){
+    the_median <- median(a_vector)
+    the_iqr <- IQR(a_vector)
+    within_bounds((the_median-the_iqr*n), (the_median+the_iqr*n), ...)
+  }
+}
+mtcars %>%
+  insist(within_n_iqrs(5), mpg) %>%
+  group_by(cyl) %>%
+  summarise(avg.mpg=mean(mpg))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

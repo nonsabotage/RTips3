@@ -21,25 +21,27 @@ pre.souceCode{
 
 p {
     margin-bottom: 1em;
-    margin-top: 2em;
+    margin-top: 1.5em;
+    font-size: 21px;
 }
-p + p{
+p:first-letter {
+  padding-left: 1em;
+}
+p + p {
     margin-bottom: 1em;
     margin-top: 0.5em;
 }
 
 ul, ol, p {
     font-family:游ゴシック,"游明朝", "HG明朝E",'Source Code Pro',sans-serif;;
-    font-size: 21px;
     line-height: 1.6;
     padding-left: 15px;
 }
 ul, ol {
-  color: #1e366a;
-  border: dotted #1e366a 1px;
-  padding: 0.5em 0.5em 0.5em 2em;
+  margin-left: 45px;
+  font-weight: bold;
+  font-size: 18px;
 }
-
 ul li, ol li {
   line-height: 1.5;
   padding: 0.5em 0;
@@ -61,7 +63,8 @@ h1 {
     padding: 0.5em;
     margin-top: 3em;
     margin-bottom: 0.5em;
-    border-bottom: solid 5px #1256A4;
+    border-bottom: solid 2px black;
+    border-top: solid 2px black;
     color: black;
     background-color: white;
 }
@@ -72,15 +75,50 @@ h1.title {
   background-color: white;
   border: solid 0px white;
 }
+h1.title {
+  position: relative;
+  line-height: 1.4;
+  padding:0.25em 1em;
+  /*display: inline-block;*/
+  top:0;
+}
+
+h1.title:before,h1.title:after{
+  position: absolute;
+  top: 0;
+  content:'';
+  width: 8px;
+  height: 100%;
+  display: inline-block;
+}
+h1.title:before{
+border-left: solid 1px black;
+border-top: solid 1px black;
+border-bottom: solid 1px black;
+  left: 0;
+}
+h1.title:after{
+  content: '';
+  border-top: solid 1px black;
+  border-right: solid 1px black;
+  border-bottom: solid 1px black;
+  right: 0;
+}
 h2 {
-  border-left:#1253A4 7px solid;
-  padding:5px;
-  padding-left:20px;
-  padding-bottom: 0.5em;
-  margin-bottom: 0.5em;
-  margin-top: 1.5em;
+  color: white;/*文字色*/
+  padding: 0.5em;/*文字周りの余白*/
+  /*display: inline-block;/*おまじない*/
+  line-height: 1.3;/*行高*/
+  background: black;/*背景色*/
+  vertical-align: middle;/*上下中央*/
+  border-radius: 25px 0px 0px 25px;/*左側の角を丸く*/
   font-size: 28px;
-  color: black;
+  margin-top: 2em;
+}
+h2:before {
+  content: '●';
+  color: white;
+  margin-right: 8px;
 }
 h3 {
     border-bottom: solid 2px #c8c8c8;
@@ -90,8 +128,11 @@ h3 {
     padding-left: 15px;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
+    font-size: 24px;
 }
 h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
   padding-left: 15px;
 }
 li.ist-group-iteml.active {
@@ -191,8 +232,8 @@ ul.tocify-header, ul.tocify-subheader {
   font-size: 13px;
 }
 li.list-group-item.active {
-  background-color: #F26964;
+  background-color: black;
 }
 li.list-group-item.active:hover {
-  background-color: #F26964;
+  background-color: black;
 }

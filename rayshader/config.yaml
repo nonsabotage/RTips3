@@ -1,0 +1,6 @@
+LIBS:
+  CRAN:
+    - tidyverse
+    - raster
+  GITHUB:
+    - rayshader

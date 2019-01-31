@@ -1,0 +1,90 @@
+---
+title: "package:rayshader"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+
+---
+update`r Sys.time()`
+
+[ここ](https://github.com/tylermorganwall/rayshader)が参考資料. 
+
+
+# Load library
+
+```{r setup, message=FALSE}
+config <- yaml::read_yaml("config.yaml")
+for (p in config$LIBS$CRAN) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p)
+  }
+  require(p, character.only = TRUE)
+}
+for (p in config$LIBS$GITHUB) {
+  if (!require(p, character.only = TRUE)) {
+      devtools::install_github(p)
+  }
+}
+```
+
+# Functions
+
+ペンディング
+
+
+# Usage
+
+## はじめてのrayshaer
+
+
+マトリックスの可視化. これは実質的にラスターオブジェクトを可視化することになる. 
+
+```{r}
+# dataの読み込み
+rst <- raster("data/FG-GML-5638-04-69-DEM5A-20151125.tif")
+elt_rst <- as.matrix(rst)
+```
+
+```{r cache = TRUE}
+# ビルトインされているテクスチャーで表示
+elt_rst %>%
+    sphere_shade(texture = "desert") %>%
+    plot_map()
+```
+
+
+```{r cache=TRUE}
+# 太陽の角度を調整
+elt_rst %>% 
+    sphere_shade(sunangle = 45, texture = "desert") %>%
+    plot_map()
+```
+
+
+河川の表示を自動で追加する方法がある. 
+
+```{r cache=TRUE}
+
+ambmat <- ambient_shade(elt_rst)
+raymat <- ray_shade(elt_rst)
+
+elt_rst %>%
+    sphere_shade(texture = "desert") %>%
+    add_water(detect_water(elt_rst), color = "desert") %>%
+    plot_map()
+
+```
+
+
+
+
+
+
