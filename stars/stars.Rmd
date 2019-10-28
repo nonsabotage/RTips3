@@ -1,0 +1,105 @@
+---
+title: "package:stars"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: ../mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section: true
+
+---
+
+
+# Spatiotemporal Arrays: Raster and Vector Datacubes
+
+data cubsとは2次元のラスター配列と，時間やバンドといった
+第三の軸を表現するデータ構造である．
+ただし，次元数は3ではなく，時間，バンド，センサーといったものを同時に
+表した5次元構造のようにより多次元のデータ構造を
+表現することが可能である. 
+また，一般的な2次元のラスターとしても使われる. 
+
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(stars)
+library(units)
+
+tif = system.file("tif/L7_ETMs.tif", package = "stars")
+read_stars(tif) %>%
+  slice(index = 1, along = "band") %>%
+  plot()
+
+
+```
+
+
+ラスター配列は規則ただしい形状である必要はなく，
+回転やせん断変形した形状でも良い. 
+
+ベクターデータの場合には，
+軸は地理空間的な情報でなく，カテゴリーなども使うことができる. 
+
+## Out-of-memory (on-disk) rasters
+
+rasterパッケージのようにメタデータを読み込むだけであり，
+メモリーにデータ全体を展開するわけではない
+
+### Raster and vector time series analysis example
+
+
+```{r warning=FALSE, message=FALSE}
+
+prec_file = system.file("nc/test_stageiv_xyt.nc", package = "stars")
+(prec = read_ncdf(prec_file, curvilinear = c("lon", "lat"), ignore_bounds = TRUE))
+sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"), "nc.gpkg") %>%
+  st_transform(st_crs(prec)) -> nc # transform from NAD27 to WGS84
+nc_outline = st_union(st_geometry(nc))
+plot_hook = function() plot(nc_outline, border = 'red', add = TRUE)
+prec %>%
+  slice(index = 1:12, along = "time") %>%
+  # stars::lot(downsample = c(5, 5, 1), hook = plot_hook)
+  ## hookという引数がないもよう
+  plot(downsample = c(5, 5, 1))
+
+
+```
+
+
+githubのページには次のような事例が記載されている．
+しかし，私の環境ではエラーが起きるため，ここではコメントアウトをしている. 
+
+```{r}
+tryCatch({
+a = aggregate(prec, by = nc, FUN = max)
+# although coordinates are longitude/latitude, st_intersects assumes that they are planar
+# although coordinates are longitude/latitude, st_intersects assumes that they are planar
+plot(a, max.plot = 23, border = 'grey', lwd = .5)
+}, 
+function (e) {
+  print("some error occur")
+}
+
+)
+
+```
+
+
+```{r}
+# index_max = function(x) ifelse(all(is.na(x)), NA, which.max(x))
+# st_apply(a, "geometry", index_max) %>%
+#   mutate(when = st_get_dimension_values(a, "time")[.$index_max]) %>%
+#   select(when) %>%
+#   plot(key.pos = 1, main = "time of maximum precipitation")
+```
+
+
+
+
+

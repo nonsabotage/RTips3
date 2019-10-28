@@ -1,0 +1,9 @@
+LIBS:
+  CRAN:
+    - tidyverse
+    - cowplot
+    - magick
+    - grid
+    - ggplot2
+    - gapminder
+    - tesseract

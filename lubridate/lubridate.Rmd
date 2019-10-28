@@ -1,0 +1,211 @@
+---
+title: "package:lubridate"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: ../mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section : true
+
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+
+
+# はじめに
+
+RStudio社による時間クラスのパッケージである`luridate`について
+マスターする. 
+
+- チートシートは[こちら](docs/lubridate.pdf). 
+- チートシートの取得さきは[こちら](https://www.rstudio.com/resources/cheatsheets/)
+
+# Cheet Sheet
+
+## Math with Date-Times
+
+lubridateは日付と日時データを扱うための数学を強化するための
+タイムスパンクラスを三つ提供する．
+__Periods__, __Dutations__, __Intervals__ である. 
+ここではこれらの説明を行う. 
+
+
+### timeline
+日付と日時データを扱うための数学は`timeline`に依る. 
+これは次の時間を矛盾なく取り扱うことが可能である. 
+
+つまりは，サマータイムのはじまりと終わり，閏年である．
+これらを無視して計算するのかどうかで，使用するクラスが異なる．
+
+
+```{r}
+# A normal day
+nor <- ymd_hms("2018-01-01 01:30:00", tz = "US/Eastern"); nor
+
+# The Start of daylight savings
+gap <- ymd_hms("2018-03-11 01:30:00", tz = "US/Eastern"); gap
+
+# The end of daylight savings
+lap <- ymd_hms("2018-11-04 00:30:00", tz = "US/Eastern"); lap
+
+# Leap years and leap seconds
+leap <- ymd("2019-0301"); leap
+```
+
+
+### Periods
+
+timelineの不規則を無視して，時刻の変化を追跡する. 
+
+```{r}
+nor + minutes(90);
+
+gap + minutes(90);
+
+lap + minutes(90);
+
+leap + years(1);
+```
+
+ピリオドな関数は次のとおり. 
+
+- yeas
+- months
+- days
+- hours
+- minutes
+- secondes
+- miliseconds
+- microseconds
+- nanoseconds
+- picoseconds
+- period
+- as_period
+- period_to_seconds
+    - seconds_to_period
+    
+    
+
+
+
+### Durations
+
+サマータイムを考慮した，つまり
+timelineの不規則を考慮した時間の経過を辿る．
+例えば，サマータイムの開始を跨ぐときには，
+時間のスキップを考慮した時間経過を求めており，
+Periodsとは異なる結果となる. 
+
+```{r}
+nor + dminutes(90)
+
+gap + dminutes(90)
+
+lap + dminutes(90)
+
+leap + dyears(1)
+```
+
+durationsな関数は次のとおり. 
+
+- dyears
+- dweeks
+- ddays
+- dhours
+- dseconds
+- dmiliseconds
+- dmicroseconds
+- dnanoseconds
+- asduration
+- make_difftime
+
+
+### Intervals
+
+タイムライン上での始まりと終わりを指定する．
+
+
+```{r}
+interval(nor, nor + minutes(90))
+
+interval(gap, gap + minutes(90))
+interval(gap, gap + dminutes(90))
+
+interval(lap, lap + minutes(90))
+
+interval(leap, leap + years(1))
+
+```
+
+
+インターバルで使う関数は次のようなものがある. 
+
+```{r}
+# Make an interal with interval() or %--%
+i <- interval(ymd("2017-01-01"), nor); i
+j <- nor %--% ymd("2017-01-01"); j
+
+```
+
+```{r}
+# ある時刻がインターバルに含まれてるか
+now() %within% i
+
+# インターバルのスタート時刻
+int_start(i)
+
+# 二つの区間が境界を共有しているか
+int_aligns(i, j)
+
+# ひとつのベクトルで表された時刻を使いインターバルを作る
+dt <- minutes(90)
+t  <- now()
+int_diff(c(t, t + dt, t + 2 * dt))
+
+# 時間の方向を反転
+int_flip(i)
+
+# 秒数の計測
+int_length(i)
+
+# インターバルのシフト
+int_shift(i, years(-1))
+
+# タイムスタンプからの作成
+as.interval(days(1), start = now())
+
+```
+
+
+
+
+
+### その他
+
+- 閏年があるので全ての年があ365日ではない
+- 閏秒があるので全ての分が60秒ではない
+- `%m+%`により期間ではなく実際の月の演算が可能
+- 2月30日など空想の日付になった場合には次の月の最初の日にすることもある
+
+```{r}
+jan31 <- ymd(20180131)
+jan31 %m+% months(1)
+
+add_with_rollback(jan31, months(1), roll_to_first = TRUE)
+```
+
+
+
+
+
+

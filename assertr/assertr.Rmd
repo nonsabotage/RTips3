@@ -6,11 +6,12 @@ output:
         toc_float: true
         highlight: tango
         theme: flatly
-        css: mycss.css
+        css: ../mycss.css
         code_folding: show
         include:
             - in_header: in_head.html
         df_print: "paged"
+        number_section: true
 
 ---
 
@@ -33,7 +34,7 @@ for (p in config$LIBS$CRAN) {
 `stopifnot`と異なり評価が成功する場合には, invisibleで引数を返すため, 
 パイプの中で連続した処理が可能となる. 
 
-データ分析のおいてはデータが適当であるのかについては常に注意が必要である. 
+**データ分析のおいてはデータが適当であるのかについては常に注意が必要である.** 
 特にデータを書き出しを伴う時には余計な変更が伴うことがある. 
 注意が必要. 
 
@@ -47,9 +48,9 @@ for (p in config$LIBS$CRAN) {
 
 ## objects
 
-- assert:
-  - メインとなる関数
-  - 関数を使い評価
+- assert
+    - メインとなる関数
+    - 関数を使い評価
 - assert_
 - assert_rows
   - 行ごとにassertを適用

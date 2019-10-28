@@ -1,0 +1,112 @@
+---
+title: "package:biscale"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: ../../mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section: true
+
+---
+update`r Sys.time()`
+
+
+```{r setup, message=FALSE, include = FALSE}
+library(biscale)
+library(tidyverse)
+```
+
+
+# はじめに
+
+パッケージbiscaleでは二軸でクラス分けした色分けを可能にする．
+作成者の例では地図で事例が示されていた．
+
+２軸を使った食わすわけは
+個人的には解釈が難しいと思うため，傾向がハッキリしている場合でないと
+手間の割には効果が乏しいという印象であった．
+しかし，パッケージでお手軽に試せるのならば悪くはないのか？
+
+# Bivarite Mapping with ggplot2
+
+ここでは[このサイト](https://cran.r-project.org/web/packages/biscale/vignettes/biscale.html)のトレースを行う. 
+
+
+
+主題図は地域の傾向を示すのに使われているが，
+"how do race and income vary together?"のような
+質問には答えることが難しい．
+`biscale`は一貫した方法で二軸の主題図を作成する方法を提供する．
+
+## Getting Started
+
+```{r eval = FALSE}
+install.packages("biscale")
+
+# develope version
+remotes::install_github("slu-openGIS/biscale")
+```
+
+### Functions
+
+全ての関数は**bi_**でプレフィックしている. 
+
+### Data
+
+アメリカのデータがプリセットさせている. 
+
+### Preparing Data
+
+
+```{r}
+library(biscale)
+library(cowplot)
+library(sf)
+
+data <- bi_class(stl_race_income, x = pctWhite, y = medInc,
+                 style = "quantile", dim = 3)
+```
+
+
+### Mapping Data
+
+```{r}
+map <- ggplot() + 
+  geom_sf(data = data, mapping = aes(fill = bi_class), 
+          color = "white", size = .1, show.legend = FALSE) + 
+  bi_scale_fill(pal = "DkBlue", dim = 3) + 
+  labs(
+    title = "Race and Income in St. Lous, MO",
+    subtitle = "Dark Blue(DkBlue) Palette"
+  ) + 
+  bi_theme()
+
+```
+
+```{r}
+legend <- bi_legend(pal = "DkBlue",
+                    dim = 3,
+                    xlab = "Higher % White ",
+                    ylab = "Higher Income ",
+                    size = 8)
+```
+
+
+```{r}
+finalPlot <- ggdraw() +
+  draw_plot(map, 0, 0, 1, 1) +
+  draw_plot(legend, 0.2, .7, 0.2, 0.2)
+
+finalPlot
+```
+
+
+
+
+

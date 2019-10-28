@@ -6,12 +6,12 @@ output:
         toc_float: true
         highlight: tango
         theme: flatly
-        css: mycss.css
+        css: ../mycss.css
         code_folding: show
         include:
             - in_header: in_head.html
         df_print: "paged"
-
+        number_section: true
 ---
 
 # install package

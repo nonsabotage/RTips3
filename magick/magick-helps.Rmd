@@ -1,0 +1,91 @@
+---
+title: "package:magick"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: ../../mycss.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section: true
+
+---
+update`r Sys.time()`
+
+
+```{r setup, message=FALSE, include = FALSE}
+config <- yaml::read_yaml("config.yaml")
+for (p in config$LIBS$CRAN) {
+  if (!require(p, character.only = TRUE)) {
+    install.packages(p)
+  }
+  require(p, character.only = TRUE)
+}
+```
+
+
+# はじめに
+
+パッケージ`magick`のチュートリアルは別ファイルで実施した．
+ここでは，その他の資料，たとえばヘルプ等を見ながらいろいろとライブラリを試していく. 
+
+
+# オブジェクトの一覧
+
+```{r}
+objects("package:magick")
+```
+
+
+# Image Color
+
+
+## image_modulate
+
+modulateとは調整の意味.
+image_modulateによりコントラスト，輝度，色を調整する．
+
+
+```{r}
+logo <- image_read("logo:")
+logo
+```
+
+
+上記の画像の輝度，飽和度，hueを調整していくということ．
+
+
+```{r}
+image_modulate(logo, brightness = 200)
+image_modulate(logo, saturation = 150)
+image_modulate(logo, hue = 200)
+```
+
+
+
+## image_quantize
+
+色の区分化. 画像が使っている色を減らすために使われる. 
+
+```{r}
+image_quantize(logo, max = 2, colorspace = 'gray')
+iamge_quantize(logo, max = 10, colorspace = "gray")
+image_quantize(logo, max = 3, colorspace = 'rgb')
+image_quantize(logo, max = 10, colorspace = 'cmyk')
+
+```
+
+
+```{r}
+image_data(image_quantize(logo, max = 2, colorspace = "gray"))
+```
+
+
+
+
+
+
