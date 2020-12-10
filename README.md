@@ -1,12 +1,4 @@
 # RTips3
 
-Rのパッケージに関するノート
-
-# tidyverse
-
-- [fs](fs/fs.html)
-- [rlang](rlang/rlang.html)
-- [polite](polite/polite.html)
-- [furrr](furrr/furrr.html)
-- [stringr](stringr/stringr.html)
+Rのパッケージに関するノート.
 
