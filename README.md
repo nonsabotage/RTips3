@@ -2,3 +2,4 @@
 
 Rのパッケージに関するノート.
 
+- [assetr](./assertr/README.html)
