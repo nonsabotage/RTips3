@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -1305,8 +1304,8 @@ window.initializeCodeFolding = function(show) {
 
     // create a collapsable div to wrap the code in
     var div = $('<div class="collapse r-code-collapse"></div>');
-    if (show || $(this)[0].classList.contains('fold-show'))
-      div.addClass('in');
+    show = (show || $(this).hasClass('fold-show')) && !$(this).hasClass('fold-hide');
+    if (show) div.addClass('in');
     var id = 'rcode-643E0F36' + currentIndex++;
     div.attr('id', id);
     $(this).before(div);
@@ -2616,9 +2615,9 @@ window.onload = function() {
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -2628,14 +2627,16 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(title);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -2644,9 +2645,9 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  { background-color: #f8f8f8; }
+  {  background-color: #f8f8f8; }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ef2929; } /* Alert */
 code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
@@ -2744,8 +2745,9 @@ h6 {
 
 <style type="text/css">body {
 padding: 3em;
-font-family:游ゴシック,Arial, Helvetica, YuGothic, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif,'Source Code Pro';
-font-size: 24px;
+
+font-family:游ゴシック,Arial, Helvetica, 游ゴシック, YuGothic, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+font-size: 18px;'Source Code Pro'
 line-height: 1.5;
 color: rgb(0,0,0,.87);;
 background:#fa;
@@ -2754,19 +2756,23 @@ html {
 background-color: #f8f8f8;
 }
 pre code {
-font-family: Consolas, 'Source Code Pro';
+font-family:"Source Han Code JP N", Consolas, 'Source Code Pro';
 }
 pre.souceCode{
 font-family: Consolas;
 }
 p {
-margin-top: 1em;
-font-size: 21px;
+margin-bottom: 1em;
+margin-top: 1.5em;
+font-size: 18px;
 }
 
-
+p + p {
+margin-bottom: 1em;
+margin-top: 0.1em;
+}
 ul, ol, p {
-font-family: 游ゴシック,"游明朝","HG明朝E",'Source Code Pro',sans-serif;;
+font-family:游ゴシック,"游明朝", "HG明朝E",'Source Code Pro',sans-serif;;
 line-height: 1.6;
 padding-left: 15px;
 }
@@ -2780,106 +2786,82 @@ line-height: 1.5;
 padding: 0.5em 0;
 }
 strong {
-color: red;
+color: #d63031;
 font-family: '游ゴシック';
+font-weight: bold;
 }
 .CodeMirror pre, .output pre {
-font-family: console, 'Source Code Pro','游ゴシック', monospace;
-}
-div.sourceCode {
-padding-top: 21px;
+font-family: "Source Han Code JP N", console, 'Source Code Pro','游ゴシック', monospace;
 }
 h1, h2, h3, h4, h5, h6 {
 font-family: '游ゴシック';
 padding: 5px;
-padding-left: 0px;
 font-weight: bold;
 }
 h1 {
-font-size: 42px;
+font-size: 28px;
 padding: 0.3em;
-padding-left: 0em;
-margin-top: 5em;
-margin-bottom: 1.5em;
-
-color: #0E7AC4;
-
+padding-left: 0.6em;
+margin-top: 3em;
+margin-bottom: 0.5em;
+border-left: solid 5px #307689;
+color: #307689;
 background-color: white;
 }
 h1.title {
 text-align: center;
 color: rgba(0,0,0,.87);
 font-size: 36px;
-
-border: solid 0px #0E7AC4;
+font-weight: bold;
+background-color: whtie;
+border-bottom: solid 7px #307689;
+border-left: solid 7px #307689;
+}
+h1.title {
 position: relative;
 line-height: 1.4;
 padding:0.25em 1em;
 top:0;
 }
-h1.title:before,h1.title:after{
-position: absolute;
-top: 0;
-content:'';
-width: 8px;
-height: 100%;
-display: inline-block;
-}
-h1.title:before{
-border-left: solid 1px #0E7AC4;
-border-top: solid 1px #0E7AC4;
-border-bottom: solid 1px #0E7AC4;
-left: 0;
-}
-h1.title:after{
-content: '';
-border-top: solid 1px #0E7AC4;
-border-right: solid 1px #0E7AC4;
-border-bottom: solid 1px #0E7AC4;
-right: 0;
-}
-h2 {
-color: rgba(0,0,0,.87);
-padding: 0.5em;
-padding-left: 0em;
 
+h2 {
+color: #307689;
+padding: 0.5em;
+padding-bottom: 0.2em;
+padding-left: 0em;
 line-height: 1.3;
 vertical-align: middle;
-font-size: 28px;
+font-size: 24px;
 margin-top: 2em;
-border-bottom: dashed 2px #0E7AC4;
+border-bottom: solid 1px darkgrey;
 }
 h3 {
-
-color: #0E7AC4;
-font-weight: bold;
+color: #307689;
 padding-bottom: 0.5em;
 padding-top: 0.5em;
 padding-left: 0em;
 margin-top: 1.5em;
 margin-bottom: 0.5em;
-font-size: 28px;
+font-size: 18px;
 }
 h4 {
-color: rgba(0,0,0,.87);
-font-weight: bold;
+color: #307689;
 margin-top: 1.5em;
-font-size: 21px
-}
-h4 + p {
-margin-top: 0em;
+margin-bottom: 0.5em;
+padding-left: 18px;
 }
 li.ist-group-iteml.active {
-background-color: #1256A4;
+background-color: #307689;
 }
 li.list-group-item.active:hover {
-background-color: #F26964;
+background-color: #307689;
 }
 a {
 color: #000099;
+font-weight: bold;
 }
 a:hover{
-color: #0E7AC4;
+color: #307689;
 }
 blockquote {
 position: relative;
@@ -2917,11 +2899,12 @@ font-family: "Computer Modern";
 }
 p code {
 font-weight: bold;
+background-color: transparent;
 }
 code,
 pre {
 padding: 0 3px 2px;
-font-family: 'Source Code Pro', Consolas, Monaco, Menlo, "Courier New", monospace;
+font-family: "Source Han Code JP N", Consolas, Monaco, Menlo, "Courier New", monospace;
 color: #333333;
 -webkit-border-radius: 3px;
 -moz-border-radius: 3px;
@@ -2938,8 +2921,8 @@ pre {
 display: block;
 padding: 9.5px;
 margin: 0 0 10px;
-font-size: 16px;
-line-height: 1.6em;
+font-size: 14px;
+line-height: 1.8em;
 word-break: break-all;
 word-wrap: break-word;
 white-space: pre;
@@ -2963,12 +2946,14 @@ ul.tocify-header, ul.tocify-subheader {
 font-size: 13px;
 }
 li.list-group-item.active {
-background-color: #0E7AC4;
+background-color: #307689;
 }
 li.list-group-item.active:hover {
-background-color: #0E7AC4;
+background-color: #307689;
 }
-</style>
+.btn-default {
+margin-top: 2em;
+}</style>
 
 
 
@@ -3045,6 +3030,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -3076,6 +3062,12 @@ summary {
 }
 }
 
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
 
 .toc-content {
   padding-left: 30px;
@@ -3159,41 +3151,23 @@ div.tocify {
 </div>
 
 
-<p>update2019-08-30 15:29:16</p>
+<p>update2020-06-10 16:06:28</p>
 <div id="load-library" class="section level1">
 <h1><span class="header-section-number">1</span> Load library</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1">config &lt;-<span class="st"> </span>yaml<span class="op">::</span><span class="kw">read_yaml</span>(<span class="st">&quot;config.yaml&quot;</span>)</a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="cf">for</span> (p <span class="cf">in</span> config<span class="op">$</span>LIBS<span class="op">$</span>CRAN) {</a>
-<a class="sourceLine" id="cb1-3" title="3">  <span class="cf">if</span> (<span class="op">!</span><span class="kw">require</span>(p, <span class="dt">character.only =</span> <span class="ot">TRUE</span>)) {</a>
-<a class="sourceLine" id="cb1-4" title="4">    <span class="kw">install.packages</span>(p)</a>
-<a class="sourceLine" id="cb1-5" title="5">  }</a>
-<a class="sourceLine" id="cb1-6" title="6">  <span class="kw">require</span>(p, <span class="dt">character.only =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb1-7" title="7">}</a></code></pre></div>
-<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.6.1</code></pre>
-<pre><code>## Warning: package &#39;dplyr&#39; was built under R version 3.6.1</code></pre>
-<div id="section" class="section level2">
-<h2><span class="header-section-number">1.1</span> レベル２</h2>
-<p>ビデオを使うと、伝えたい内容を明確に表現できます。[オンライン ビデオ] をクリックすると、追加したいビデオを、それに応じた埋め込みコードの形式で貼り付けできるようになります。キーワードを入力して、文書に最適なビデオをオンラインで検索することもできます。</p>
-<p>Word に用意されているヘッダー、フッター、表紙、テキスト ボックス デザインを組み合わせると、プロのようなできばえの文書を作成できます。たとえば、一致する表紙、ヘッダー、サイドバーを追加できます。[挿入] をクリックしてから、それぞれのギャラリーで目的の要素を選んでください。</p>
-<p>テーマとスタイルを使って、文書全体の統一感を出すこともできます。[デザイン] をクリックし新しいテーマを選ぶと、図やグラフ、SmartArt グラフィックが新しいテーマに合わせて変わります。スタイルを適用すると、新しいテーマに適合するように見出しが変更されます。</p>
-<div id="section-1" class="section level3">
-<h3><span class="header-section-number">1.1.1</span> レベル3</h3>
-<p>ビデオを使うと、伝えたい内容を明確に表現できます。[オンライン ビデオ] をクリックすると、追加したいビデオを、それに応じた埋め込みコードの形式で貼り付けできるようになります。キーワードを入力して、文書に最適なビデオをオンラインで検索することもできます。</p>
-<p>Word に用意されているヘッダー、フッター、表紙、テキスト ボックス デザインを組み合わせると、プロのようなできばえの文書を作成できます。たとえば、一致する表紙、ヘッダー、サイドバーを追加できます。[挿入] をクリックしてから、それぞれのギャラリーで目的の要素を選んでください。</p>
-<p>テーマとスタイルを使って、文書全体の統一感を出すこともできます。[デザイン] をクリックし新しいテーマを選ぶと、図やグラフ、SmartArt グラフィックが新しいテーマに合わせて変わります。スタイルを適用すると、新しいテーマに適合するように見出しが変更されます。</p>
-<div id="section-2" class="section level4">
-<h4><span class="header-section-number">1.1.1.1</span> レベル4</h4>
-<p>Word に用意されているヘッダー、フッター、表紙、テキスト ボックス デザインを組み合わせると、プロのようなできばえの文書を作成できます。たとえば、一致する表紙、ヘッダー、サイドバーを追加できます。[挿入] をクリックしてから、それぞれのギャラリーで目的の要素を選んでください。 テーマとスタイルを使って、文書全体の統一感を出すこともできます。[デザイン] をクリックし新しいテーマを選ぶと、図やグラフ、SmartArt グラフィックが新しいテーマに合わせて変わります。スタイルを適用すると、新しいテーマに適合するように見出しが変更されます。</p>
-</div>
-</div>
-</div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>config &lt;-<span class="st"> </span>yaml<span class="op">::</span><span class="kw">read_yaml</span>(<span class="st">&quot;config.yaml&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="cf">for</span> (p <span class="cf">in</span> config<span class="op">$</span>LIBS<span class="op">$</span>CRAN) {</span>
+<span id="cb1-3"><a href="#cb1-3"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="kw">require</span>(p, <span class="dt">character.only =</span> <span class="ot">TRUE</span>)) {</span>
+<span id="cb1-4"><a href="#cb1-4"></a>    <span class="kw">install.packages</span>(p)</span>
+<span id="cb1-5"><a href="#cb1-5"></a>  }</span>
+<span id="cb1-6"><a href="#cb1-6"></a>  <span class="kw">require</span>(p, <span class="dt">character.only =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb1-7"><a href="#cb1-7"></a>}</span></code></pre></div>
 </div>
 <div id="regula-expression" class="section level1">
 <h1><span class="header-section-number">2</span> Regula expression</h1>
 <p>Source: <code>vignettes/regular-expressions.Rmd</code></p>
 <p>stringrの正規表現はstringiパッケージで実装されている. 正規表現について詳細を知りたい場合には 「詳細 正規表現」を参照してもらいたい.</p>
 <p>正規表現は生の文字列であっても, <code>regex</code>でラップされているのと等しい. <code>regex</code>を使うのは標準オプションでないときである.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">str_extract</span>(fruit, <span class="st">&quot;nana&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">str_extract</span>(fruit, <span class="st">&quot;nana&quot;</span>)</span></code></pre></div>
 <pre><code>##  [1] NA     NA     NA     &quot;nana&quot; NA     NA     NA     NA     NA     NA    
 ## [11] NA     NA     NA     NA     NA     NA     NA     NA     NA     NA    
 ## [21] NA     NA     NA     NA     NA     NA     NA     NA     NA     NA    
@@ -3202,7 +3176,7 @@ div.tocify {
 ## [51] NA     NA     NA     NA     NA     NA     NA     NA     NA     NA    
 ## [61] NA     NA     NA     NA     NA     NA     NA     NA     NA     NA    
 ## [71] NA     NA     NA     NA     NA     NA     NA     NA     NA     NA</code></pre>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">str_extract</span>(fruit, <span class="kw">regex</span>(<span class="st">&quot;nana&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">str_extract</span>(fruit, <span class="kw">regex</span>(<span class="st">&quot;nana&quot;</span>))</span></code></pre></div>
 <pre><code>##  [1] NA     NA     NA     &quot;nana&quot; NA     NA     NA     NA     NA     NA    
 ## [11] NA     NA     NA     NA     NA     NA     NA     NA     NA     NA    
 ## [21] NA     NA     NA     NA     NA     NA     NA     NA     NA     NA    
@@ -3213,52 +3187,52 @@ div.tocify {
 ## [71] NA     NA     NA     NA     NA     NA     NA     NA     NA     NA</code></pre>
 <div id="basic-matches" class="section level2">
 <h2><span class="header-section-number">2.1</span> Basic matches</h2>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;apple&quot;</span>, <span class="st">&quot;banana&quot;</span>, <span class="st">&quot;pear&quot;</span>)</a>
-<a class="sourceLine" id="cb8-2" title="2"><span class="kw">str_extract</span>(x, <span class="st">&quot;an&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;apple&quot;</span>, <span class="st">&quot;banana&quot;</span>, <span class="st">&quot;pear&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;an&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] NA   &quot;an&quot; NA</code></pre>
 <p><code>regex</code>を使うことで大文字についても 参照するオプションに変更が可能.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1">bananas &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;banana&quot;</span>, <span class="st">&quot;Banana&quot;</span>, <span class="st">&quot;BANANA&quot;</span>)</a>
-<a class="sourceLine" id="cb10-2" title="2"><span class="kw">str_detect</span>(bananas, <span class="st">&quot;banana&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>bananas &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;banana&quot;</span>, <span class="st">&quot;Banana&quot;</span>, <span class="st">&quot;BANANA&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="kw">str_detect</span>(bananas, <span class="st">&quot;banana&quot;</span>)</span></code></pre></div>
 <pre><code>## [1]  TRUE FALSE FALSE</code></pre>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">str_detect</span>(bananas, <span class="kw">regex</span>(<span class="st">&quot;banana&quot;</span>, <span class="dt">ignore_case =</span> <span class="ot">TRUE</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">str_detect</span>(bananas, <span class="kw">regex</span>(<span class="st">&quot;banana&quot;</span>, <span class="dt">ignore_case =</span> <span class="ot">TRUE</span>))</span></code></pre></div>
 <pre><code>## [1] TRUE TRUE TRUE</code></pre>
 <p><code>.</code>は全ての文字にマッチする.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;.a.&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;.a.&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] NA    &quot;ban&quot; &quot;ear&quot;</code></pre>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">str_extract</span>(bananas, <span class="st">&quot;.a.&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">str_extract</span>(bananas, <span class="st">&quot;.a.&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;ban&quot; &quot;Ban&quot; NA</code></pre>
 <p>改行文字にマッチさせることも可能である.</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">X</span><span class="ch">\n</span><span class="st">&quot;</span>, <span class="st">&quot;.X.&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">X</span><span class="ch">\n</span><span class="st">&quot;</span>, <span class="st">&quot;.X.&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] FALSE</code></pre>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">X</span><span class="ch">\n</span><span class="st">&quot;</span>, <span class="kw">regex</span>(<span class="st">&quot;.X.&quot;</span>, <span class="dt">dotall=</span><span class="ot">TRUE</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">X</span><span class="ch">\n</span><span class="st">&quot;</span>, <span class="kw">regex</span>(<span class="st">&quot;.X.&quot;</span>, <span class="dt">dotall=</span><span class="ot">TRUE</span>))</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
 </div>
 <div id="escaping" class="section level2">
 <h2><span class="header-section-number">2.2</span> Escaping</h2>
 <p><code>.</code>自体にマッチさせるにはエスケープが必要である. ただ<code>\</code>そのものをエスケープさせる必要もあるため, <code>.</code>という 文字にマッチさせるには<code>\\.</code>という正規表現を使う必要がある.</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" title="1"><span class="co"># To create the gregular expression, we need</span></a>
-<a class="sourceLine" id="cb22-2" title="2">dot &lt;-<span class="st"> &quot;</span><span class="ch">\\</span><span class="st">.&quot;</span></a>
-<a class="sourceLine" id="cb22-3" title="3"></a>
-<a class="sourceLine" id="cb22-4" title="4"><span class="co"># But the expression itself only contains one:</span></a>
-<a class="sourceLine" id="cb22-5" title="5"><span class="kw">writeLines</span>(dot)</a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="co"># To create the gregular expression, we need</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a>dot &lt;-<span class="st"> &quot;</span><span class="ch">\\</span><span class="st">.&quot;</span></span>
+<span id="cb20-3"><a href="#cb20-3"></a></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="co"># But the expression itself only contains one:</span></span>
+<span id="cb20-5"><a href="#cb20-5"></a><span class="kw">writeLines</span>(dot)</span></code></pre></div>
 <pre><code>## \.</code></pre>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" title="1"><span class="co"># And this tells R to look for an explicit</span></a>
-<a class="sourceLine" id="cb24-2" title="2"><span class="kw">str_extract</span>(<span class="kw">c</span>(<span class="st">&quot;abc&quot;</span>, <span class="st">&quot;a.c&quot;</span>, <span class="st">&quot;bef&quot;</span>), <span class="st">&quot;a</span><span class="ch">\\</span><span class="st">.c&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="co"># And this tells R to look for an explicit</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a><span class="kw">str_extract</span>(<span class="kw">c</span>(<span class="st">&quot;abc&quot;</span>, <span class="st">&quot;a.c&quot;</span>, <span class="st">&quot;bef&quot;</span>), <span class="st">&quot;a</span><span class="ch">\\</span><span class="st">.c&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] NA    &quot;a.c&quot; NA</code></pre>
 <p>これはつまり, <code>\</code>をマッチさせるにはエスケープ用の文字と, 文字としての<code>\</code>が必要であるため次ぎのようになる.</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" title="1">x &lt;-<span class="st"> &quot;a</span><span class="ch">\\</span><span class="st">b&quot;</span></a>
-<a class="sourceLine" id="cb26-2" title="2"><span class="kw">writeLines</span>(x)</a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a>x &lt;-<span class="st"> &quot;a</span><span class="ch">\\</span><span class="st">b&quot;</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a><span class="kw">writeLines</span>(x)</span></code></pre></div>
 <pre><code>## a\b</code></pre>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;</span><span class="ch">\\\\</span><span class="st">&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;</span><span class="ch">\\\\</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;\\&quot;</code></pre>
 <p>その他のクォートマッチの方法には<code>\Q...\E</code>がある. これは…を正確に一致させる.</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" title="1">x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;a.b.c.d&quot;</span>, <span class="st">&quot;aeb&quot;</span>)</a>
-<a class="sourceLine" id="cb30-2" title="2">starts_with &lt;-<span class="st"> &quot;a.b&quot;</span></a>
-<a class="sourceLine" id="cb30-3" title="3"></a>
-<a class="sourceLine" id="cb30-4" title="4"></a>
-<a class="sourceLine" id="cb30-5" title="5"><span class="kw">str_detect</span>(x, <span class="kw">paste0</span>(<span class="st">&quot;^&quot;</span>, starts_with))</a></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;a.b.c.d&quot;</span>, <span class="st">&quot;aeb&quot;</span>)</span>
+<span id="cb28-2"><a href="#cb28-2"></a>starts_with &lt;-<span class="st"> &quot;a.b&quot;</span></span>
+<span id="cb28-3"><a href="#cb28-3"></a></span>
+<span id="cb28-4"><a href="#cb28-4"></a></span>
+<span id="cb28-5"><a href="#cb28-5"></a><span class="kw">str_detect</span>(x, <span class="kw">paste0</span>(<span class="st">&quot;^&quot;</span>, starts_with))</span></code></pre></div>
 <pre><code>## [1] TRUE TRUE</code></pre>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" title="1"><span class="kw">str_detect</span>(x, <span class="kw">paste0</span>(<span class="st">&quot;^</span><span class="ch">\\</span><span class="st">Q&quot;</span>, starts_with, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">E&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a><span class="kw">str_detect</span>(x, <span class="kw">paste0</span>(<span class="st">&quot;^</span><span class="ch">\\</span><span class="st">Q&quot;</span>, starts_with, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">E&quot;</span>))</span></code></pre></div>
 <pre><code>## [1]  TRUE FALSE</code></pre>
 </div>
 <div id="special-characters" class="section level2">
@@ -3284,35 +3258,35 @@ div.tocify {
 </div>
 <div id="matiching-multiple-characters" class="section level2">
 <h2><span class="header-section-number">2.4</span> Matiching multiple characters</h2>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" title="1"><span class="co"># grapheme cluster</span></a>
-<a class="sourceLine" id="cb34-2" title="2">x &lt;-<span class="st"> &quot;a\u0301&quot;</span></a>
-<a class="sourceLine" id="cb34-3" title="3"><span class="kw">str_extract</span>(x, <span class="st">&quot;.&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a><span class="co"># grapheme cluster</span></span>
+<span id="cb32-2"><a href="#cb32-2"></a>x &lt;-<span class="st"> &quot;a\u0301&quot;</span></span>
+<span id="cb32-3"><a href="#cb32-3"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;.&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;a&quot;</code></pre>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">X&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">X&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;a&lt;U+0301&gt;&quot;</code></pre>
 <p><code>\d</code>は数字にマッチする. ちなみにだが<code>\d</code>はユニコードで規定された 他の言語の数字表現にもマッチする.</p>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" title="1"><span class="kw">str_extract_all</span>(<span class="st">&quot;1 + 2 = 3&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">d+&quot;</span>)[[<span class="dv">1</span>]]</a></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="kw">str_extract_all</span>(<span class="st">&quot;1 + 2 = 3&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">d+&quot;</span>)[[<span class="dv">1</span>]]</span></code></pre></div>
 <pre><code>## [1] &quot;1&quot; &quot;2&quot; &quot;3&quot;</code></pre>
 <p><code>\s</code>はホワイトスペースにどれでもマッチする. もちろんタブや改行なども.</p>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb40-1" title="1">(text &lt;-<span class="st"> &quot;Some </span><span class="ch">\t</span><span class="st"> badly</span><span class="ch">\n\t</span><span class="st">tspaced </span><span class="ch">\f</span><span class="st"> text&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1"></a>(text &lt;-<span class="st"> &quot;Some </span><span class="ch">\t</span><span class="st"> badly</span><span class="ch">\n\t</span><span class="st">tspaced </span><span class="ch">\f</span><span class="st"> text&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;Some \t badly\n\ttspaced \f text&quot;</code></pre>
-<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb42-1" title="1"><span class="kw">str_replace_all</span>(text, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">s+&quot;</span>, <span class="st">&quot; &quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1"></a><span class="kw">str_replace_all</span>(text, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">s+&quot;</span>, <span class="st">&quot; &quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;Some badly tspaced text&quot;</code></pre>
 <p><code>\p{property name}</code>はユニコードのプロパティネームでマッチさせる.</p>
-<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb44-1" title="1">(text &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;&quot;Double quotes&quot;&#39;</span>, <span class="st">&quot;&lt;&lt;Guillemet&gt;&gt;&quot;</span>, <span class="st">&quot;`Fancy quotes`&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a>(text &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;&quot;Double quotes&quot;&#39;</span>, <span class="st">&quot;&lt;&lt;Guillemet&gt;&gt;&quot;</span>, <span class="st">&quot;`Fancy quotes`&quot;</span>))</span></code></pre></div>
 <pre><code>## [1] &quot;\&quot;Double quotes\&quot;&quot; &quot;&lt;&lt;Guillemet&gt;&gt;&quot;     &quot;`Fancy quotes`&quot;</code></pre>
-<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb46-1" title="1"><span class="kw">str_replace_all</span>(text, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">p{quotation mark}&quot;</span>, <span class="st">&quot;&#39;&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a><span class="kw">str_replace_all</span>(text, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">p{quotation mark}&quot;</span>, <span class="st">&quot;&#39;&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;&#39;Double quotes&#39;&quot; &quot;&lt;&lt;Guillemet&gt;&gt;&quot;   &quot;`Fancy quotes`&quot;</code></pre>
 <p><code>\w</code>はワードにマッチ. <code>\W</code>はワード以外にマッチする.</p>
-<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb48-1" title="1"><span class="kw">str_extract_all</span>(<span class="st">&quot;Dont&#39;t eat that!&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">w+&quot;</span>)[[<span class="dv">1</span>]]</a></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a><span class="kw">str_extract_all</span>(<span class="st">&quot;Dont&#39;t eat that!&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">w+&quot;</span>)[[<span class="dv">1</span>]]</span></code></pre></div>
 <pre><code>## [1] &quot;Dont&quot; &quot;t&quot;    &quot;eat&quot;  &quot;that&quot;</code></pre>
-<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb50-1" title="1"><span class="kw">str_split</span>(<span class="st">&quot;Don&#39;t eat that!&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">W+&quot;</span>) <span class="co"># ワード文字以外で分割を行う</span></a></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1"></a><span class="kw">str_split</span>(<span class="st">&quot;Don&#39;t eat that!&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">W+&quot;</span>) <span class="co"># ワード文字以外で分割を行う</span></span></code></pre></div>
 <pre><code>## [[1]]
 ## [1] &quot;Don&quot;  &quot;t&quot;    &quot;eat&quot;  &quot;that&quot; &quot;&quot;</code></pre>
 <p><code>\b</code>はワードのバウンダリーにマッチ?</p>
-<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb52-1" title="1"><span class="kw">str_replace_all</span>(<span class="st">&quot;The quick brown fox&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;_&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1"></a><span class="kw">str_replace_all</span>(<span class="st">&quot;The quick brown fox&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;_&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;_The_ _quick_ _brown_ _fox_&quot;</code></pre>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb54-1" title="1"><span class="kw">str_replace_all</span>(<span class="st">&quot;The quick brown fox&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">B&quot;</span>, <span class="st">&quot;_&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1"></a><span class="kw">str_replace_all</span>(<span class="st">&quot;The quick brown fox&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">B&quot;</span>, <span class="st">&quot;_&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;T_h_e q_u_i_c_k b_r_o_w_n f_o_x&quot;</code></pre>
 <p><strong>character classes</strong>という角括弧をつかった記法もある.</p>
 <ul>
@@ -3337,10 +3311,10 @@ div.tocify {
 <li><code>[:blank:]</code>: space and tab.</li>
 </ul>
 <p>キャラクタークラスをさらに,　キャラクタークラスにしても大丈夫.</p>
-<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb56-1" title="1">x &lt;-<span class="st"> &quot;hoge12l4AX&quot;</span></a>
-<a class="sourceLine" id="cb56-2" title="2"></a>
-<a class="sourceLine" id="cb56-3" title="3"><span class="co"># 数値とA, Xにマッチする記法</span></a>
-<a class="sourceLine" id="cb56-4" title="4"><span class="kw">str_extract_all</span>(x, <span class="st">&quot;[[:digit:]AX]&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1"></a>x &lt;-<span class="st"> &quot;hoge12l4AX&quot;</span></span>
+<span id="cb54-2"><a href="#cb54-2"></a></span>
+<span id="cb54-3"><a href="#cb54-3"></a><span class="co"># 数値とA, Xにマッチする記法</span></span>
+<span id="cb54-4"><a href="#cb54-4"></a><span class="kw">str_extract_all</span>(x, <span class="st">&quot;[[:digit:]AX]&quot;</span>)</span></code></pre></div>
 <pre><code>## [[1]]
 ## [1] &quot;1&quot; &quot;2&quot; &quot;4&quot; &quot;A&quot; &quot;X&quot;</code></pre>
 </div>
@@ -3351,21 +3325,21 @@ div.tocify {
 <div id="grouping" class="section level2">
 <h2><span class="header-section-number">2.6</span> Grouping</h2>
 <p>（）を使うことで標準記法を上書き出来る.</p>
-<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb58-1" title="1"><span class="kw">str_extract</span>(<span class="kw">c</span>(<span class="st">&quot;gray&quot;</span>, <span class="st">&quot;grey&quot;</span>), <span class="st">&quot;gre|ay&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1"></a><span class="kw">str_extract</span>(<span class="kw">c</span>(<span class="st">&quot;gray&quot;</span>, <span class="st">&quot;grey&quot;</span>), <span class="st">&quot;gre|ay&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;ay&quot;  &quot;gre&quot;</code></pre>
-<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb60-1" title="1"><span class="kw">str_extract</span>(<span class="kw">c</span>(<span class="st">&quot;gray&quot;</span>, <span class="st">&quot;grey&quot;</span>), <span class="st">&quot;gr(e|a)y&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1"></a><span class="kw">str_extract</span>(<span class="kw">c</span>(<span class="st">&quot;gray&quot;</span>, <span class="st">&quot;grey&quot;</span>), <span class="st">&quot;gr(e|a)y&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;gray&quot; &quot;grey&quot;</code></pre>
 <p>（）はグループを作る. それ自身を参照可能な形で.</p>
-<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb62-1" title="1"><span class="co"># 任意の２文字が連続するパターン</span></a>
-<a class="sourceLine" id="cb62-2" title="2">pattern &lt;-<span class="st"> &quot;(..)</span><span class="ch">\\</span><span class="st">1&quot;</span></a>
-<a class="sourceLine" id="cb62-3" title="3">fruit <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb62-4" title="4"><span class="st">  </span><span class="kw">str_subset</span>(pattern)</a></code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1"></a><span class="co"># 任意の２文字が連続するパターン</span></span>
+<span id="cb60-2"><a href="#cb60-2"></a>pattern &lt;-<span class="st"> &quot;(..)</span><span class="ch">\\</span><span class="st">1&quot;</span></span>
+<span id="cb60-3"><a href="#cb60-3"></a>fruit <span class="op">%&gt;%</span></span>
+<span id="cb60-4"><a href="#cb60-4"></a><span class="st">  </span><span class="kw">str_subset</span>(pattern)</span></code></pre></div>
 <pre><code>## [1] &quot;banana&quot;      &quot;coconut&quot;     &quot;cucumber&quot;    &quot;jujube&quot;      &quot;papaya&quot;     
 ## [6] &quot;salal berry&quot;</code></pre>
-<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb64-1" title="1"><span class="co"># パターンの取り出し</span></a>
-<a class="sourceLine" id="cb64-2" title="2">fruit <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb64-3" title="3"><span class="st">  </span><span class="kw">str_subset</span>(pattern) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb64-4" title="4"><span class="st">  </span><span class="kw">str_match</span>(pattern)</a></code></pre></div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1"></a><span class="co"># パターンの取り出し</span></span>
+<span id="cb62-2"><a href="#cb62-2"></a>fruit <span class="op">%&gt;%</span></span>
+<span id="cb62-3"><a href="#cb62-3"></a><span class="st">  </span><span class="kw">str_subset</span>(pattern) <span class="op">%&gt;%</span></span>
+<span id="cb62-4"><a href="#cb62-4"></a><span class="st">  </span><span class="kw">str_match</span>(pattern)</span></code></pre></div>
 <pre><code>##      [,1]   [,2]
 ## [1,] &quot;anan&quot; &quot;an&quot;
 ## [2,] &quot;coco&quot; &quot;co&quot;
@@ -3374,11 +3348,11 @@ div.tocify {
 ## [5,] &quot;papa&quot; &quot;pa&quot;
 ## [6,] &quot;alal&quot; &quot;al&quot;</code></pre>
 <p><code>(?:...)</code>を使うことでグループ化しない（）として使うことができる.</p>
-<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb66-1" title="1"><span class="kw">str_match</span>(<span class="kw">c</span>(<span class="st">&quot;grey&quot;</span>, <span class="st">&quot;gray&quot;</span>), <span class="st">&quot;gr(e|a)y&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1"></a><span class="kw">str_match</span>(<span class="kw">c</span>(<span class="st">&quot;grey&quot;</span>, <span class="st">&quot;gray&quot;</span>), <span class="st">&quot;gr(e|a)y&quot;</span>)</span></code></pre></div>
 <pre><code>##      [,1]   [,2]
 ## [1,] &quot;grey&quot; &quot;e&quot; 
 ## [2,] &quot;gray&quot; &quot;a&quot;</code></pre>
-<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb68-1" title="1"><span class="kw">str_match</span>(<span class="kw">c</span>(<span class="st">&quot;grey&quot;</span>, <span class="st">&quot;gray&quot;</span>), <span class="st">&quot;gr(?:e|a)y&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1"></a><span class="kw">str_match</span>(<span class="kw">c</span>(<span class="st">&quot;grey&quot;</span>, <span class="st">&quot;gray&quot;</span>), <span class="st">&quot;gr(?:e|a)y&quot;</span>)</span></code></pre></div>
 <pre><code>##      [,1]  
 ## [1,] &quot;grey&quot;
 ## [2,] &quot;gray&quot;</code></pre>
@@ -3386,10 +3360,10 @@ div.tocify {
 <div id="anchors" class="section level2">
 <h2><span class="header-section-number">2.7</span> Anchors</h2>
 <p>標準では正規表現は文字列のあらゆる部分とマッチする. しかし, しばしばアンカー表現を使うことでより有用となる.</p>
-<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb70-1" title="1">x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;apple&quot;</span>, <span class="st">&quot;banana&quot;</span>, <span class="st">&quot;pear&quot;</span>)</a>
-<a class="sourceLine" id="cb70-2" title="2"><span class="kw">str_extract</span>(x, <span class="st">&quot;^a&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1"></a>x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;apple&quot;</span>, <span class="st">&quot;banana&quot;</span>, <span class="st">&quot;pear&quot;</span>)</span>
+<span id="cb68-2"><a href="#cb68-2"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;^a&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;a&quot; NA  NA</code></pre>
-<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb72-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;a$&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;a$&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] NA  &quot;a&quot; NA</code></pre>
 <p>複数行に対しては少し勝手が異なるのに注意をする.</p>
 <ul>
@@ -3399,12 +3373,12 @@ div.tocify {
 <li><code>\z</code>: matches the end of the input</li>
 <li><code>\Z</code>: matches the end of the input, but before the final line terminator, if exists</li>
 </ul>
-<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb74-1" title="1">x &lt;-<span class="st"> &quot;Line 1</span><span class="ch">\n</span><span class="st">Line 2</span><span class="ch">\n</span><span class="st">Line 3</span><span class="ch">\n</span><span class="st">&quot;</span></a>
-<a class="sourceLine" id="cb74-2" title="2"><span class="kw">str_extract_all</span>(x, <span class="st">&quot;^Line..&quot;</span>)[[<span class="dv">1</span>]]</a></code></pre></div>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1"></a>x &lt;-<span class="st"> &quot;Line 1</span><span class="ch">\n</span><span class="st">Line 2</span><span class="ch">\n</span><span class="st">Line 3</span><span class="ch">\n</span><span class="st">&quot;</span></span>
+<span id="cb72-2"><a href="#cb72-2"></a><span class="kw">str_extract_all</span>(x, <span class="st">&quot;^Line..&quot;</span>)[[<span class="dv">1</span>]]</span></code></pre></div>
 <pre><code>## [1] &quot;Line 1&quot;</code></pre>
-<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb76-1" title="1"><span class="kw">str_extract_all</span>(x, <span class="kw">regex</span>(<span class="st">&quot;^Line..&quot;</span>, <span class="dt">multiline =</span> <span class="ot">TRUE</span>))[[<span class="dv">1</span>]]</a></code></pre></div>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1"></a><span class="kw">str_extract_all</span>(x, <span class="kw">regex</span>(<span class="st">&quot;^Line..&quot;</span>, <span class="dt">multiline =</span> <span class="ot">TRUE</span>))[[<span class="dv">1</span>]]</span></code></pre></div>
 <pre><code>## [1] &quot;Line 1&quot; &quot;Line 2&quot; &quot;Line 3&quot;</code></pre>
-<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb78-1" title="1"><span class="kw">str_extract_all</span>(x, <span class="kw">regex</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">ALine..&quot;</span>, <span class="dt">multiline =</span> <span class="ot">TRUE</span>))[[<span class="dv">1</span>]]</a></code></pre></div>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1"></a><span class="kw">str_extract_all</span>(x, <span class="kw">regex</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">ALine..&quot;</span>, <span class="dt">multiline =</span> <span class="ot">TRUE</span>))[[<span class="dv">1</span>]]</span></code></pre></div>
 <pre><code>## [1] &quot;Line 1&quot;</code></pre>
 </div>
 <div id="repetition" class="section level2">
@@ -3414,19 +3388,19 @@ div.tocify {
 <li><code>+</code>: 1 or more</li>
 <li><code>*</code>: 0 or more</li>
 </ul>
-<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb80-1" title="1">x &lt;-<span class="st"> &quot;1880 is the longest year in Roman numerals: MDCCCLXXXVIII&quot;</span></a>
-<a class="sourceLine" id="cb80-2" title="2"><span class="kw">str_extract</span>(x, <span class="st">&quot;CC?&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1"></a>x &lt;-<span class="st"> &quot;1880 is the longest year in Roman numerals: MDCCCLXXXVIII&quot;</span></span>
+<span id="cb78-2"><a href="#cb78-2"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;CC?&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;CC&quot;</code></pre>
-<div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb82-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;CC+&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;CC+&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;CCC&quot;</code></pre>
-<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb84-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;C[LX]+&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;C[LX]+&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;CLXXX&quot;</code></pre>
 <p>よく使うのはアメリカ英語とイギリス英語の違いで <code>colou?r</code>を表現することが多い. もしくは（）を使うことで グループ化した文字の繰り返しがある.</p>
-<div class="sourceCode" id="cb86"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb86-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;C{2}&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;C{2}&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;CC&quot;</code></pre>
-<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb88-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;C{2,}&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb86"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;C{2,}&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;CCC&quot;</code></pre>
-<div class="sourceCode" id="cb90"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb90-1" title="1"><span class="kw">str_extract</span>(x, <span class="st">&quot;C{2,3}&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;C{2,3}&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;CCC&quot;</code></pre>
 <p>遅延評価も可能である. <strong>最小マッチ</strong>なども可能である.</p>
 <ul>
@@ -3436,9 +3410,9 @@ div.tocify {
 <li><code>{n,}?</code>: n or more, match as few tiems as possible</li>
 <li><code>{n,m}?</code>: between n and m, match as few times as possible, but at least n</li>
 </ul>
-<div class="sourceCode" id="cb92"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb92-1" title="1"><span class="kw">str_extract</span>(x, <span class="kw">c</span>(<span class="st">&quot;C{2,3}&quot;</span>, <span class="st">&quot;C{2,3}?&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb90"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1"></a><span class="kw">str_extract</span>(x, <span class="kw">c</span>(<span class="st">&quot;C{2,3}&quot;</span>, <span class="st">&quot;C{2,3}?&quot;</span>))</span></code></pre></div>
 <pre><code>## [1] &quot;CCC&quot; &quot;CC&quot;</code></pre>
-<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb94-1" title="1"><span class="kw">str_extract</span>(x, <span class="kw">c</span>(<span class="st">&quot;C[LX]+&quot;</span>, <span class="st">&quot;C[LX]+?&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb92"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1"></a><span class="kw">str_extract</span>(x, <span class="kw">c</span>(<span class="st">&quot;C[LX]+&quot;</span>, <span class="st">&quot;C[LX]+?&quot;</span>))</span></code></pre></div>
 <pre><code>## [1] &quot;CLXXX&quot; &quot;CL&quot;</code></pre>
 <p><strong>最大マッチ</strong>を探すには上記の<code>?</code>を<code>+</code>に変更するだけでよい.</p>
 <ul>
@@ -3449,36 +3423,36 @@ div.tocify {
 <li><code>{n,m}+</code>: between n and m, possesive</li>
 </ul>
 <p>そのほかの関連知識として<code>atomic-match</code>がある. ACで失敗したときに, BCでマッチを試みてくれる. <code>&gt;</code>と<code>:</code>の違いは前からマッチを試みてくれるか, 後方からマッチを 試みてくれるのかの違いに見える.</p>
-<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb96-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;.B|A)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;.B|A)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb98-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:D|T)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:D|T)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] FALSE</code></pre>
-<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb100-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:D|B)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:D|B)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb102-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;T|D)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;T|D)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] FALSE</code></pre>
-<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb104-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;B|D)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;B|D)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb106"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb106-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:B|D)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:B|D)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb108"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb108-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;.B|T)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb106"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;.B|T)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb110"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb110-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;T|.B)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb108"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;T|.B)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb112"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb112-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:T|.B)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb110"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:T|.B)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb114-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:A|.B)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb112"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?:A|.B)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
-<div class="sourceCode" id="cb116"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb116-1" title="1"><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;A|.B)C&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1"></a><span class="kw">str_detect</span>(<span class="st">&quot;ABC&quot;</span>, <span class="st">&quot;(?&gt;A|.B)C&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] FALSE</code></pre>
 <p>なるほどわからん.</p>
-<div class="sourceCode" id="cb118"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb118-1" title="1">x &lt;-<span class="st"> &quot;(a+b()&quot;</span></a>
-<a class="sourceLine" id="cb118-2" title="2"></a>
-<a class="sourceLine" id="cb118-3" title="3"><span class="co"># normal version</span></a>
-<a class="sourceLine" id="cb118-4" title="4"><span class="kw">str_extract</span>(x, <span class="st">&quot;^</span><span class="ch">\\</span><span class="st">([^()]+</span><span class="ch">\\</span><span class="st">)&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb116"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1"></a>x &lt;-<span class="st"> &quot;(a+b()&quot;</span></span>
+<span id="cb116-2"><a href="#cb116-2"></a></span>
+<span id="cb116-3"><a href="#cb116-3"></a><span class="co"># normal version</span></span>
+<span id="cb116-4"><a href="#cb116-4"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;^</span><span class="ch">\\</span><span class="st">([^()]+</span><span class="ch">\\</span><span class="st">)&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] NA</code></pre>
-<div class="sourceCode" id="cb120"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb120-1" title="1"><span class="co"># backtracking version</span></a>
-<a class="sourceLine" id="cb120-2" title="2"><span class="kw">str_extract</span>(x, <span class="kw">regex</span>(<span class="st">&quot;^</span><span class="ch">\\</span><span class="st">((?&gt;[^()]+)</span><span class="ch">\\</span><span class="st">)&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb118"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1"></a><span class="co"># backtracking version</span></span>
+<span id="cb118-2"><a href="#cb118-2"></a><span class="kw">str_extract</span>(x, <span class="kw">regex</span>(<span class="st">&quot;^</span><span class="ch">\\</span><span class="st">((?&gt;[^()]+)</span><span class="ch">\\</span><span class="st">)&quot;</span>))</span></code></pre></div>
 <pre><code>## [1] NA</code></pre>
 </div>
 <div id="look-arounds" class="section level2">
@@ -3489,14 +3463,21 @@ div.tocify {
 <li><code>(?&lt;=...)</code>: よくわからん</li>
 <li><code>(?&lt;!...)</code>: よくわからん</li>
 </ul>
-<div class="sourceCode" id="cb122"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb122-1" title="1">x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;1 piece&quot;</span>, <span class="st">&quot;2 pieces&quot;</span>, <span class="st">&quot;3&quot;</span>)</a>
-<a class="sourceLine" id="cb122-2" title="2"><span class="kw">str_extract</span>(x, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">d+(?= pieces?)&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb120"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb120-1"><a href="#cb120-1"></a>x &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;1 piece&quot;</span>, <span class="st">&quot;2 pieces&quot;</span>, <span class="st">&quot;3&quot;</span>)</span>
+<span id="cb120-2"><a href="#cb120-2"></a><span class="kw">str_extract</span>(x, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">d+(?= pieces?)&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;1&quot; &quot;2&quot; NA</code></pre>
-<div class="sourceCode" id="cb124"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb124-1" title="1">y &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;100&quot;</span>, <span class="st">&quot;$400&quot;</span>)</a>
-<a class="sourceLine" id="cb124-2" title="2"><span class="kw">str_extract</span>(y, <span class="st">&quot;(?&lt;=</span><span class="ch">\\</span><span class="st">$)</span><span class="ch">\\</span><span class="st">d+&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb122"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1"></a>y &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;100&quot;</span>, <span class="st">&quot;$400&quot;</span>)</span>
+<span id="cb122-2"><a href="#cb122-2"></a><span class="kw">str_extract</span>(y, <span class="st">&quot;(?&lt;=</span><span class="ch">\\</span><span class="st">$)</span><span class="ch">\\</span><span class="st">d+&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] NA    &quot;400&quot;</code></pre>
-<div class="sourceCode" id="cb126"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb126-1" title="1"><span class="kw">str_extract</span>(y, <span class="st">&quot;(?&lt;!</span><span class="ch">\\</span><span class="st">$)</span><span class="ch">\\</span><span class="st">d+&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb124"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1"></a><span class="kw">str_extract</span>(y, <span class="st">&quot;(?&lt;!</span><span class="ch">\\</span><span class="st">$)</span><span class="ch">\\</span><span class="st">d+&quot;</span>)</span></code></pre></div>
 <pre><code>## [1] &quot;100&quot; &quot;00&quot;</code></pre>
+<div id="練習" class="section level3">
+<h3><span class="header-section-number">2.9.1</span> 練習</h3>
+<p>aaaaaaaaaaaaaaaaaaaaaaa あああああああああああああああああああああああああああああああ</p>
+<blockquote>
+<p>これが引用文だ これが引用文だ</p>
+</blockquote>
+</div>
 </div>
 </div>
 
@@ -3555,7 +3536,7 @@ $(document).ready(function ()  {
       theme: "bootstrap3",
       context: '.toc-content',
       hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
       },
       ignoreSelector: ".toc-ignore",
       scrollTo: 0

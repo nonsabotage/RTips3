@@ -1,0 +1,103 @@
+---
+title: "package : visdat "
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss-best.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section: false
+---
+
+
+# はじめに
+
+欠損値のデータを可視化する方法. 
+ざっと見た限りでは，パーミュテーションを利用する. 
+
+
+# 準備
+
+```{r setup}
+library(visdat)
+library(tidyverse)
+library(palmerpenguins)
+```
+
+
+# イントロ
+
+
+まずは一発可視化してみる. 
+
+```{r}
+data("typical_data")
+
+vis_dat(typical_data)
+```
+
+
+もう少しカスタムする. 
+変数ごとの欠損率を調べる．
+
+```{r}
+vis_miss(typical_data)
+```
+
+
+これはつまり，ここから並び変えたときに特徴が
+出てくるとまずいということだと思う. 
+並び換えに使ったデータ以外で一緒に欠損が固まるとまずいという
+ことだと思う. 
+
+```{r}
+vis_miss(arrange(typical_data, Age))
+```
+
+
+欠損値ではなく，期待する値域などで表示を分ける．
+
+```{r}
+vis_expect(typical_data,  ~ .x > 10)
+```
+
+
+
+まあ他にも色々ある見たい．上の関数がもう少し柔軟に
+処理できればいいのだが・・・？
+
+というこで，比較をするものもあった.
+
+```{r}
+# make a new dataset of ariquality that contains some NA values
+aq_diff <- airquality
+aq_diff[1:10, 1:2] <- NA
+vis_compare(airquality, aq_diff)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

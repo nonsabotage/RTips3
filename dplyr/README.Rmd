@@ -1,0 +1,167 @@
+---
+title: "package : dplyr"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss-best.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section: true
+---
+
+
+
+```{r setup, include=FALSE}
+target_libs <- c("tidyverse", "palmerpenguins")
+for (lib in target_libs) {
+    if (!require(lib, character.only = TRUE)) {
+        try({install.packages(lib); library(lib, character.only = TRUE)})
+    }
+}
+
+```
+
+
+# Original Tips
+
+## across
+acrossを使うことによりselectの構文がsummariseやmutateで用いることができる. 
+これにより，特定のカラムを選択，あるいは，除去した上で関数を当てることができる. 
+これにより，mutate_if, summarise_if,などは必要なくなるというイメージで良いのかな?
+
+```{r}
+penguins %>%
+  group_by(species) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
+```
+
+関数はlistに入れることで複数当てることができる. 
+またこのとき，名前をカラムや関数名を使い指定することができる. 
+
+```{r}
+penguins %>% 
+  filter(complete.cases(.)) %>%
+  group_by(species) %>%
+  summarise(across(ends_with("_mm"), list(men = mean, med = median), na.rm = TRUE, .names = "{.col}_{.fn}"))
+```
+
+purrrのような構文も使える. 
+
+```{r}
+penguins %>% 
+  mutate(across(ends_with("_mm"), ~ .x * 1000))
+```
+
+
+## c_across
+
+`rowwise`の場合に扱うことが可能である. 
+使いどころ
+
+```{r}
+penguins %>% 
+  rowwise() %>%
+  transmute(
+    sum = sum(c_across(ends_with("_mm"))), 
+    sd  = sd(c_across(ends_with(("_mm"))))
+  )
+```
+
+
+## Context dependent expressions
+
+- n() gives the current group size.
+- cur_data() gives the current data for the current group (excluding grouping variables).
+- cur_data_all() gives the current data for the current group (including grouping variables)
+- cur_group() gives the group keys, a tibble with one row and one column for each grouping variable.
+- cur_group_id() gives a unique numeric identifier for the current group.
+- cur_group_rows() gives the row indices for the current group.
+- cur_column() gives the name of the current column (in across() only).
+
+data.table de
+
+
+cur_data() <-> .SD
+cur_group_id() <-> .GRP
+cur_group() <-> .BY
+cur_group_rows() <-> .I
+
+
+```{r}
+penguins %>% 
+  group_by(species) %>% 
+  summarise(n())
+```
+```{r}
+tmp <- 
+  penguins %>% 
+  group_by(species) %>% 
+  summarise(a = list(cur_data()))
+
+tmp$a[[1]]
+```
+
+```{r}
+tmp <- 
+  penguins %>% 
+  group_by(species) %>% 
+  summarise(a = list(cur_data_all()))
+
+tmp$a[[1]]
+```
+
+
+
+
+```{r}
+tmp <- 
+  penguins %>% 
+  group_by(species) %>% 
+  summarise(a = list(cur_group()))
+
+tmp$a[[1]]
+```
+
+
+
+```{r}
+tmp <- 
+  penguins %>% 
+  group_by(species) %>% 
+  summarise(a = list(cur_group_id()))
+
+tmp$a[[1]]
+```
+
+
+
+
+
+```{r}
+tmp <- 
+  penguins %>% 
+  group_by(species) %>% 
+  summarise(a = list(cur_group_rows()))
+
+tmp$a[[1]]
+```
+
+
+
+```{r}
+# across only
+tmp <- 
+  penguins %>% 
+  summarise(across(where(is.numeric), ~ cur_column()))
+
+
+tmp
+
+```
+
+

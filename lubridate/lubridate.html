@@ -1305,7 +1305,7 @@ window.initializeCodeFolding = function(show) {
 
     // create a collapsable div to wrap the code in
     var div = $('<div class="collapse r-code-collapse"></div>');
-    if (show)
+    if (show || $(this)[0].classList.contains('fold-show'))
       div.addClass('in');
     var id = 'rcode-643E0F36' + currentIndex++;
     div.attr('id', id);
@@ -2744,9 +2744,8 @@ h6 {
 
 <style type="text/css">body {
 padding: 3em;
-
-font-family:游ゴシック,Arial, Helvetica, 游ゴシック, YuGothic, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
-font-size: 24px;'Source Code Pro'
+font-family:游ゴシック,Arial, Helvetica, YuGothic, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif,'Source Code Pro';
+font-size: 24px;
 line-height: 1.5;
 color: rgb(0,0,0,.87);;
 background:#fa;
@@ -2761,13 +2760,11 @@ pre.souceCode{
 font-family: Consolas;
 }
 p {
-margin-bottom: 1em;
-margin-top: 1.5em;
+margin-top: 1em;
 font-size: 21px;
 }
-p:first-letter {
-padding-left: 1em;
-}
+
+
 ul, ol, p {
 font-family: 游ゴシック,"游明朝","HG明朝E",'Source Code Pro',sans-serif;;
 line-height: 1.6;
@@ -2795,6 +2792,7 @@ padding-top: 21px;
 h1, h2, h3, h4, h5, h6 {
 font-family: '游ゴシック';
 padding: 5px;
+padding-left: 0px;
 font-weight: bold;
 }
 h1 {
@@ -2803,7 +2801,9 @@ padding: 0.3em;
 padding-left: 0em;
 margin-top: 5em;
 margin-bottom: 1.5em;
-color: #da3c22;
+
+color: #0E7AC4;
+
 background-color: white;
 }
 h1.title {
@@ -2811,7 +2811,7 @@ text-align: center;
 color: rgba(0,0,0,.87);
 font-size: 36px;
 
-border: solid 0px #da3c22;
+border: solid 0px #0E7AC4;
 position: relative;
 line-height: 1.4;
 padding:0.25em 1em;
@@ -2826,16 +2826,16 @@ height: 100%;
 display: inline-block;
 }
 h1.title:before{
-border-left: solid 1px #da3c22;
-border-top: solid 1px #da3c22;
-border-bottom: solid 1px #da3c22;
+border-left: solid 1px #0E7AC4;
+border-top: solid 1px #0E7AC4;
+border-bottom: solid 1px #0E7AC4;
 left: 0;
 }
 h1.title:after{
 content: '';
-border-top: solid 1px #da3c22;
-border-right: solid 1px #da3c22;
-border-bottom: solid 1px #da3c22;
+border-top: solid 1px #0E7AC4;
+border-right: solid 1px #0E7AC4;
+border-bottom: solid 1px #0E7AC4;
 right: 0;
 }
 h2 {
@@ -2847,24 +2847,27 @@ line-height: 1.3;
 vertical-align: middle;
 font-size: 28px;
 margin-top: 2em;
-border-bottom: solid 3px #da3c22;
+border-bottom: dashed 2px #0E7AC4;
 }
 h3 {
 
-color: #da3c22;
+color: #0E7AC4;
 font-weight: bold;
 padding-bottom: 0.5em;
 padding-top: 0.5em;
 padding-left: 0em;
 margin-top: 1.5em;
 margin-bottom: 0.5em;
-font-size: 28px;
+font-size: 24px;
 }
 h4 {
-color: #da3c22;
+color: rgba(0,0,0,.87);
+font-weight: bold;
 margin-top: 1.5em;
-margin-bottom: 0.5em;
-padding-left: 15px;
+font-size: 21px
+}
+h4 + p {
+margin-top: 0em;
 }
 li.ist-group-iteml.active {
 background-color: #1256A4;
@@ -2876,7 +2879,7 @@ a {
 color: #000099;
 }
 a:hover{
-color: #da3c22;
+color: #0E7AC4;
 }
 blockquote {
 position: relative;
@@ -2960,10 +2963,10 @@ ul.tocify-header, ul.tocify-subheader {
 font-size: 13px;
 }
 li.list-group-item.active {
-background-color: #da3c22;
+background-color: #0E7AC4;
 }
 li.list-group-item.active:hover {
-background-color: #da3c22;
+background-color: #0E7AC4;
 }
 </style>
 
@@ -2981,7 +2984,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -3275,8 +3277,8 @@ div.tocify {
 <a class="sourceLine" id="cb45-2" title="2">dt &lt;-<span class="st"> </span><span class="kw">minutes</span>(<span class="dv">90</span>)</a>
 <a class="sourceLine" id="cb45-3" title="3">t  &lt;-<span class="st"> </span><span class="kw">now</span>()</a>
 <a class="sourceLine" id="cb45-4" title="4"><span class="kw">int_diff</span>(<span class="kw">c</span>(t, t <span class="op">+</span><span class="st"> </span>dt, t <span class="op">+</span><span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>dt))</a></code></pre></div>
-<pre><code>## [1] 2019-08-22 14:41:30 JST--2019-08-22 16:11:30 JST
-## [2] 2019-08-22 16:11:30 JST--2019-08-22 17:41:30 JST</code></pre>
+<pre><code>## [1] 2019-10-30 10:42:17 JST--2019-10-30 12:12:17 JST
+## [2] 2019-10-30 12:12:17 JST--2019-10-30 13:42:17 JST</code></pre>
 <div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb47-1" title="1"><span class="co"># 時間の方向を反転</span></a>
 <a class="sourceLine" id="cb47-2" title="2"><span class="kw">int_flip</span>(i)</a></code></pre></div>
 <pre><code>## [1] 2018-01-01 06:30:00 UTC--2017-01-01 UTC</code></pre>
@@ -3288,7 +3290,7 @@ div.tocify {
 <pre><code>## [1] 2016-01-01 UTC--2017-01-01 06:30:00 UTC</code></pre>
 <div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb53-1" title="1"><span class="co"># タイムスタンプからの作成</span></a>
 <a class="sourceLine" id="cb53-2" title="2"><span class="kw">as.interval</span>(<span class="kw">days</span>(<span class="dv">1</span>), <span class="dt">start =</span> <span class="kw">now</span>())</a></code></pre></div>
-<pre><code>## [1] 2019-08-22 14:41:30 JST--2019-08-23 14:41:30 JST</code></pre>
+<pre><code>## [1] 2019-10-30 10:42:17 JST--2019-10-31 10:42:17 JST</code></pre>
 </div>
 <div id="section-1" class="section level3">
 <h3><span class="header-section-number">2.1.5</span> その他</h3>

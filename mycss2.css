@@ -1,0 +1,244 @@
+body {
+  padding: 3em;
+  /*font-family:"游明朝", YuMincho, "ヒラギノ明朝 ProN W3", "Hiragino Mincho ProN", "HG明朝E",'Source Code Pro',monospace,"ヒラギノ角ゴ Pro W3",メイリオ,Arial,Verdana,"ＭＳ Ｐゴシック",sans-serif;;*/
+  font-family:游ゴシック,Arial, Helvetica, 游ゴシック, YuGothic, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  font-size: 18px;'Source Code Pro'
+  line-height: 1.5;
+  color: rgb(0,0,0,.87);;
+  background:#fa;
+}
+
+html {
+  background-color: #f8f8f8;
+}
+
+pre code {
+  font-family:"Source Han Code JP N", Consolas, 'Source Code Pro';
+}
+pre.souceCode{
+  font-family: Consolas;
+}
+
+p {
+    margin-bottom: 1em;
+    margin-top: 1.5em;
+    font-size: 21px;
+}
+/*p:first-letter {
+  padding-left: 1em;
+}*/
+p + p {
+    margin-bottom: 1em;
+    margin-top: 0.1em;
+}
+
+ul, ol, p {
+    font-family:游ゴシック,"游明朝", "HG明朝E",'Source Code Pro',sans-serif;;
+    line-height: 1.6;
+    padding-left: 15px;
+}
+ul, ol {
+  margin-left: 45px;
+  font-weight: bold;
+  font-size: 18px;
+}
+ul li, ol li {
+  line-height: 1.5;
+  padding: 0.5em 0;
+}
+strong {
+  color: #d63031;
+  font-family: '游ゴシック';
+  font-weight: bold;
+}
+.CodeMirror pre, .output pre {
+    font-family: "Source Han Code JP N", console, 'Source Code Pro','游ゴシック', monospace;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-family: '游ゴシック';
+    padding: 5px;
+    font-weight: bold;
+}
+h1 {
+    font-size: 32px;
+    padding: 0.3em;
+    padding-left: 0.6em;
+    margin-top: 3em;
+    margin-bottom: 0.5em;
+    border-left: solid 7px #1253A4;
+    color: #1253A4;
+    background-color: white;
+}
+h1.title {
+  text-align: center;
+  color: rgba(0,0,0,.87);
+  font-size: 36px;
+  background-color: whtie;
+  border: solid 0px #1253A4;
+}
+h1.title {
+  position: relative;
+  line-height: 1.4;
+  padding:0.25em 1em;
+  top:0;
+}
+
+h1.title:before,h1.title:after{
+  position: absolute;
+  top: 0;
+  content:'';
+  width: 8px;
+  height: 100%;
+  display: inline-block;
+}
+h1.title:before{
+  border-left: solid 1px #1253A4;
+  border-top: solid 1px #1253A4;
+  border-bottom: solid 1px #1253A4;
+  left: 0;
+}
+h1.title:after{
+  content: '';
+  border-top: solid 1px #1253A4;
+  border-right: solid 1px #1253A4;
+  border-bottom: solid 1px #1253A4;
+  right: 0;
+}
+h2 {
+  color: #1253A4;/*文字色*/
+  padding: 0.5em;/*文字周りの余白*/
+  padding-left: 0em;
+  line-height: 1.3;/*行高*/
+  vertical-align: middle;/*上下中央*/
+  font-size: 28px;
+  margin-top: 2em;
+  border-bottom: solid 2px black;
+}
+h3 {
+    color: #1253A4;
+    padding-bottom: 0.5em;
+    padding-top: 0.5em;
+    padding-left: 0em;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-size: 24px;
+}
+h4 {
+  color: #1253A4;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  padding-left: 18px;
+}
+li.ist-group-iteml.active {
+  background-color: #1256A4;
+}
+li.list-group-item.active:hover {
+  background-color: #F26964;
+}
+
+a {
+  color: #000099;
+}
+a:hover{
+  color: #1253A4;
+}
+blockquote {
+    position: relative;
+    padding: 10px 15px 10px 50px;
+    box-sizing: border-box;
+    font-weight: bold;
+    /*border: solid 2px #464646;*/
+    background-color: #f8f8f8;
+    color: #464646;
+    margin:1.5em 2em 1.5em 2em;
+}
+blockquote p {
+    padding: 0;
+    margin: 10px 0;
+    line-height: 1.7;
+}
+blockquote cite {
+    display: block;
+    text-align: right;
+    color: #888888;
+    font-size: 0.9em;
+}
+
+.math{
+  font-size: 25px;
+  font-family: "Computer Modern";
+}
+
+pre math {
+  padding: 0;
+  color: inherit;
+  white-space: pre;
+  white-space: pre-wrap;
+  background-color: transparent;
+  font-size: 25px;
+  font-family: "Computer Modern";
+}
+
+p code {
+  font-weight: bold;
+  background-color: transparent;
+}
+
+code,
+pre {
+  padding: 0 3px 2px;
+  font-family: "Source Han Code JP N", Consolas, Monaco, Menlo,  "Courier New", monospace;
+  color: #333333;
+  -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
+          border-radius: 3px;
+}
+
+p strong {
+  padding: 2px 4px;
+  white-space: nowrap;
+  background: linear-gradient(transparent 60%, #FFD464 60%);
+  font-weight: bold;
+  color: rgb(0,0,0,.87);
+}
+
+pre {
+  display: block;
+  padding: 9.5px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.8em;
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre;
+  white-space: pre-wrap;
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+}
+
+pre code {
+  padding: 0;
+  color: inherit;
+  white-space: pre;
+  white-space: pre-wrap;
+  background-color: transparent;
+  border: 0;
+}
+
+ul.tocify-header, ul.tocify-subheader {
+  font-size: 13px;
+}
+li.list-group-item.active {
+  background-color: #1253A4;
+}
+li.list-group-item.active:hover {
+  background-color: #1253A4;
+}
+
+.btn-default {
+   margin-top: 2em;
+}

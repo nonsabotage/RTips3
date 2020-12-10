@@ -1,0 +1,302 @@
+---
+title: "package:"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss-best.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+knitr::opts_chunk$set(python.reticulate = TRUE)
+```
+
+
+# Introduction
+
+アンダーソンのデータセット`datasets::iris`に変わる
+新しい標準データセットである`penguins`データを提供する
+**palmerpenguins**パッケージについて調べる. 
+
+ちなみにpython、juliaでも使えるよ！
+
+```{python}
+import seaborn as sns
+penguins = sns.load_dataset("penguins")
+print(penguins.head())
+```
+
+
+
+## Reference
+
+- [palmerpenguins](https://education.rstudio.com/blog/2020/07/palmerpenguins-cran/)
+- [github](https://allisonhorst.github.io/palmerpenguins/index.html)
+
+
+```{r}
+if (!require(palmerpenguins)) {
+  install.packages("palmerpenguins")
+  try({
+    library(palmerpenguins)
+  })
+}
+library(tidyverse)
+library(recipes)
+```
+
+# Meet the penguins
+
+palmerpenguins dataは、
+ペンギンの体長や血液型などについて
+三つの種類と三つの地域で三年にわたり観測されたものである。
+
+ペンギンの絵については[ここから](./docs/palmerpenguins_slides.pdf)確認ができる. 
+
+- bill: くちばし
+- flipper: ヒレ
+
+
+```{r}
+penguins
+```
+
+## Highliths
+
+
+```{r}
+ggplot(
+  data = penguins, 
+  aes (x = flipper_length_mm, y = body_mass_g)
+) + 
+  geom_point(
+    aes(color = species, shape = species), size = 2
+  ) + 
+  scale_color_manual(values = c("darkorange", "darkorchid", "cyan4")) + 
+  stat_ellipse(aes(color = species))
+```
+
+
+マクロで見ると負の相関だけど、データを分割してみると、負の相関が
+見える、ということがわかりやすく示せるデータになる. 
+
+```{r}
+
+ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm)) + 
+  geom_point(size = 2) + 
+  geom_smooth(method = "lm", se = FALSE)
+
+```
+
+
+
+上記の線形回帰を種類別に記述すると次のようになる。
+
+
+```{r}
+
+ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm)) + 
+  geom_point(aes(color = species, 
+                 shape = species), 
+             size = 2) + 
+  geom_smooth(method = "lm", se = FALSE, aes(color = species)) + 
+  scale_color_manual(values = c("darkorange", "darkorchid", "cyan4"))
+
+```
+
+
+# PCA with penguins and recipes
+
+[ここ](https://allisonhorst.github.io/palmerpenguins/articles/pca.html)を参考に
+PCAについてやるという話. 
+
+```{r}
+library(palmerpenguins)
+library(corrr)
+library(GGally)
+library(recipes)
+library(tidytext)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+theme_set(theme_minimal())
+```
+
+## correlation matrix
+
+まずは相関係数行列を作成する. 
+相関係数行列を見ると、filpper_length_mm、body_mass_gの相関が強いことがわかる. 
+
+```{r}
+penguins_corr <- 
+  penguins %>%
+  dplyr::select(body_mass_g, ends_with("_mm")) %>%
+  correlate() %>%
+  rearrange()
+
+penguins_corr
+```
+
+## pairwise plot matrix
+
+```{r}
+penguins %>%
+  select(species, body_mass_g, ends_with("_mm")) %>%
+  ggpairs(
+    aes(color = species), 
+    columns = c("flipper_length_mm", "body_mass_g", "bill_length_mm", "bill_depth_mm")
+  ) + 
+  scale_color_manual(values = c("darkorange", "purple", "cyan4")) + 
+  scale_fill_manual(values = c("darkorange", "purple", "cyan4"))
+```
+
+## PCA
+
+`recipes`パッケージを使う. PCAを使う前処理として次が必要である. 
+
+- remove any NA values
+- center all predictors and scale all predictors
+
+```{r}
+penguin_recipe <- 
+  recipe( ~ ., data = penguins) %>%
+  update_role(species, island, sex, year, new_role = "id") %>%
+  step_naomit(all_predictors()) %>%
+  step_normalize(all_predictors()) %>%
+  step_pca(all_predictors(), id = "pca") %>%
+  prep()
+```
+
+
+
+```{r}
+penguin_pca <- 
+  penguin_recipe %>%
+  tidy(id = "pca")
+
+penguin_pca
+```
+
+
+```{r}
+penguins %>%
+  dplyr::select(body_mass_g, ends_with("_mm")) %>%
+  tidyr::drop_na() %>%
+  scale() %>%
+  prcomp() %>%
+  .$rotation
+```
+
+
+PCAの寄与度を可視化する. 
+
+```{r}
+penguin_recipe %>%
+  tidy(id = "pca", type = "variance") %>%
+  dplyr::filter(terms == "percent variance") %>%
+  ggplot(aes(x = component, y = value)) +
+  geom_col(fill = "#b6dfe2") +
+  xlim(c(0, 5)) +
+  ylab("% of total variance")
+```
+
+## Plot PCA loadings
+
+
+```{r}
+library(ggplot2)
+penguin_pca %>%
+  mutate(terms = tidytext::reorder_within(terms,
+                                          abs(value),
+                                          component)) %>%
+  ggplot(aes(abs(value), terms, fill = value > 0)) +
+  geom_col() +
+  facet_wrap(~component, scales = "free_y") +
+  tidytext::scale_y_reordered() +
+  scale_fill_manual(values = c("#b6dfe2", "#0A537D")) +
+  labs(
+    x = "Absolute value of contribution",
+    y = NULL, fill = "Positive?"
+  )
+```
+
+
+## Plot PCA loadings + scores
+
+```{r}
+pca_wider <- 
+  penguin_pca %>%
+  pivot_wider(names_from = component, id_cols = terms)
+```
+
+```{r}
+# define arrow style
+arrow_style <- 
+  arrow(
+    length = unit(.05, "inches"), 
+    type = "closed"
+  )
+
+pca_plot <-
+  juice(penguin_recipe) %>%
+  ggplot(aes(PC1, PC2)) + 
+  geom_point(aes(color = species, shape = species), 
+             alpha = .8, size = 2) + 
+  scale_colour_manual(values = c("darkorange", "purple", "cyan4"))
+
+pca_plot + 
+  geom_segment(data = pca_wider, 
+               aes(xend = PC1, yend = PC2), 
+               x = 0, y = 0, arrow = arrow_style) + 
+  geom_text(data = pca_wider, 
+            aes(x = PC1, y = PC2, label = terms), 
+            hjust = 0, 
+            vjust = 1, 
+            size  = 5, 
+            color = "#0A537D")
+```
+
+
+なんというか、このグラフのわかりやすさには驚嘆せざるを得ない。
+`filpper_length_mm`と`body_mass_g`が同様にPC1に効いていることがわかる。
+そしてPC1により、Gentoo種とその他の種が分離できそうなことがわかる. 
+
+```{r}
+penguins %>%
+  group_by(species) %>%
+  select(flipper_length_mm, body_mass_g) %>%
+  summarise_all(mean, na.rm = TRUE)
+```
+
+
+もう少し詳しく見てみる.
+
+```{r}
+pca_plot %+%
+  aes(PC2, PC3) +
+  geom_segment(data = pca_wider,
+               aes(xend = PC2, yend = PC3),
+               x = 0,
+               y = 0,
+               arrow = arrow_style) +
+  geom_text(data = pca_wider,
+            aes(x = PC2, y = PC3, label = terms),
+            hjust = 0,
+            vjust = 1,
+            size = 5,
+            color = '#0A537D')
+```
+
+
+
+
+

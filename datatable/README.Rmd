@@ -1,0 +1,2727 @@
+---
+title: "package : data.table"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss-best.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section: false
+---
+
+基本的には[github](https://github.com/Rdatatable/data.table/wiki/Getting-started)に
+すべてが書かれている．
+リファレンスは[ここ](https://rdatatable.gitlab.io/data.table/)から
+確認すること. 
+探すと色々と関数があるのはわかるけど，いまいち`join`について
+記法がわからない. 
+いわゆる`left_join`はあるのだが，inner, outerなどがわかればより
+有り難いのだが・・・・．
+`overlapjoin`や`non-equijoin`などがある. 
+`by = .EACHI`はどのような意味なのだろうか?
+each i を示す特別な記号であるのはわかったが.
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+
+```{r}
+target_libs <- c(
+    "data.table", 
+    "fs", 
+    "purrr", 
+    "ggplot2"
+)
+for (lib in target_libs) {
+    if (!require(lib, character.only = TRUE)) {
+        try({install.packages(lib); library(lib, character.only = TRUE)})
+    }
+}
+
+# constant
+DATA_DIR <- "D"
+```
+
+
+# Introduction to data.table
+
+[ここ](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html)
+のチュートリアルをやる. 
+
+## Data 
+
+データの読み込みは`fread`関数を使う. 
+`fread`は、http/httpsをインプットファイルとして指定することも可能である. 
+
+```{r}
+input <- path(DATA_DIR, "flights14.csv")
+
+flights <- fread(input)
+flights[1:5]
+
+```
+
+```{r}
+print(class(flights))
+```
+
+
+## Introduction
+
+### Basices
+
+`data.table`は`data.frame`を強化したものを与えるRのパッケージである．
+インスタンスの作成は`fread`によるものあるし，下記のように`data.table`関数で
+作成することが可能である. 
+
+```{r}
+DT = data.table(
+    ID = c("b", "b", "b", "a", "a", "c"), 
+    a = 1:6, 
+    b = 7:12, 
+    c = 13:18
+)
+DT
+```
+
+```{r}
+print(class(DT))
+```
+
+ほかにも，`setDT`，`as.data.table`から作成することができる. 
+前者は`data.frame`や`list`の構造を対象としたもので，後者はそれ以外を対象としたものである. 
+
+```{r}
+# 既存のオブジェクトを変換する際には, copyしておく必要がある. 
+iris_dt <- copy(iris)
+print(list(address(iris), address(iris_dt)))
+
+# オブジェクトは受けとることもできるし実際には
+# これだけでdata.tableになっている
+setDT(iris_dt)
+
+iris_dt
+```
+
+```{r}
+print(class(iris_dt))
+```
+
+
+```{r}
+as.data.table(iris)
+```
+
+```{r}
+d <- list(
+    a = letters, 
+    b = LETTERS, 
+    c = seq_along(letters)
+)
+setDT(d)
+```
+
+```{r}
+d
+```
+
+
+
+ところで，data.frameに対して何が強化されているのか．
+data.frameに対して，行や列の選択ができるようになっていること
+以外にも様々なことが`[ ... ]`のように角括弧を通じて行える．
+
+generalシンタックスは次である．
+i, j, byがそれぞれSQLと対応しているとうイメージになる.
+
+```{}
+DT[i, j, by]
+
+  R:                 i                 j        by
+SQL:  where | order by   select | update  group by
+```
+
+
+- subset/reorder rows using **i**
+- calculate **j**
+- grouped by **by**
+
+さっそく実践してみる. 
+
+```{r}
+# j,byが必要ない場合にはカンマを省略することができる
+# カンマをつけていても問題はない
+ans <- flights[origin == "JFK" & month == 6L]
+head(ans)
+```
+
+
+ソートをしてみる. この例では`origin`を昇順により並び変えた上で，
+destを降順で並び変える. 
+このとき使われている`order`はベースRのものである. 
+
+```{r}
+ans <- flights[order(origin, -dest)]
+head(ans)
+```
+
+
+さて，列を選択してみる. 
+単純にはベクトルで返される. 
+
+
+```{r}
+ans <- flights[, arr_delay]
+head(ans)
+```
+
+data.table, あるいは複数列を選択する場合には,
+listを使うこと. 
+
+```{r}
+ans <- flights[, list(arr_delay)]
+head(ans)
+```
+
+`data.table`では`list`の代わりとして`.()`を使うことができる. 
+`.()`は`list`のエイリアスである. 
+
+
+```{r}
+ans <- flights[, .(arr_delay, dep_delay)]
+head(ans)
+```
+
+```{r}
+identical(
+    flights[, .(arr_delay, dep_delay)], 
+    flights[, list(arr_delay, dep_delay)]
+    
+)
+```
+
+
+`.()`が`list`のエイリアスであることがわかっていれば，
+次のように列名の変更が有効であることがわかる. 
+
+```{r}
+ans <- flights[, .(delay_arr = arr_delay, delay_dep = dep_delay)]
+head(ans)
+```
+
+
+さて`j`を使い計算をしてみる. 
+
+```{r}
+ans <- flights[, sum((arr_delay + dep_delay) < 0)]
+ans
+```
+
+
+なにが起こったのだろうか. 
+
+実は`j`というのは列を選択するだけでなく，
+列を使った表現式を扱うことが可能なのである. 
+
+
+6月のJFK空港を基点としたすべての到着と発着における送れについて，平均値を
+計算してみる. 
+
+```{r}
+ans <- flights[origin == "JFK" & month == 6L, 
+               .(m_arr = mean(arr_delay), m_dep = mean(dep_delay))]
+
+ans
+```
+
+
+カウントについてもお手の物である. 
+
+```{r}
+ans <- flights[origin == "JFK" & month == 6L, .(n = length(dest))]
+ans
+```
+
+
+
+スペシャルシンボルの`.N`を使うこともできる. 
+
+```{r}
+# そのまま使うときに出てくるこの値はなんの値なのだろうか？
+print(.N)
+```
+
+
+```{r}
+ans <- flights[origin == "JFK" & month == 6L, .N]
+ans
+```
+
+上述した操作は次の操作と同値である．
+しかし，次の操作は，１度全体のコピーを作成して，そこに関数を適用していることから，
+上述した操作と比べて非効率である．
+
+`nrow(flights[origin == "JFK" & month == 6L])`
+
+
+
+
+文字列としてのカラム名を使い参照することも可能である. 
+
+```{r}
+ans <- flights[, c("arr_delay", "dep_delay")]
+head(ans)
+```
+
+
+変数としてカラムの文字列を有している時には次の２つの使い方がある. 
+
+```{r}
+select_cols = c("arr_delay", "dep_delay")
+flights[, ..select_cols][1:10]
+```
+
+
+
+```{r}
+flights[, select_cols, with = FALSE][1:10]
+```
+
+
+他にもカラム選択のやり方として，非選択を選択することも可能である. 
+
+```{r}
+ans <- flights[, !select_cols, with = FALSE]
+ans[1:10]
+```
+
+```{r}
+ans <- flights[, -..select_cols]
+ans[1:10]
+```
+
+ここから，ここまで，というやり方でも列を選択することが可能である. 
+
+```{r}
+flights[, year:day][1:10]
+```
+
+
+
+```{r}
+flights[, !(year:day)][1:10]
+```
+
+```{r}
+flights[, -(year:day)][1:10]
+```
+
+### Aggregations
+
+`by`がどのようにグルーピングとして機能するのかを見ていく. 
+ここまでをちゃんと読んでいれば次の操作で起こっていることは明らかである. 
+もちろん変数は１つなので，`.()`を使う必要はない. 
+
+```{r}
+ans <- flights[, .(.N), by = .(origin)]
+ans[1:10]
+```
+
+```{r}
+ans <- flights[carrier == "AA", .N, by = origin]
+ans[1:10]
+```
+
+配列部分で複数の変数をしているできるのは, `by`引数においても同様. 
+
+```{r}
+ans <- flights[carrier == "AA", .N, by = .(origin, dest)]
+ans[1:10]
+```
+
+
+`by`に文字列ベクトルを使うことも可能である. 
+
+```{r}
+ans <- flights[carrier == "AA", .N, by = c("origin", "dest")]
+ans[1:10]
+```
+
+
+aggregationは複数の変数に対しても行える. 
+
+```{r}
+ans <- flights[
+        carrier == "AA", 
+        .(ad_mean = mean(arr_delay), dd_mean = mean(dep_delay)), 
+        by = .(origin, dest, month)
+    ]
+head(ans)
+```
+
+ところで，上記の結果において，origi, dest, monthの順にオーダーをつけたい場合には
+どのようにすれば良いのか. 次の操作のように**keyby**を使う．
+昇順でしか使えないのかな？
+
+
+```{r}
+ans <- flights[
+    carrier == "AA", 
+    .(ad_mean = mean(arr_delay), dd_mean = mean(dep_delay)), 
+    keyby = .(origin, dest, month)
+]
+head(ans)
+```
+
+
+DTは処理を，つまり`[ ]`をつなげていくことができる. 
+これにより，結果をソートなども中間変数を用意せずに行うことが可能である. 
+
+```{r}
+ans <- flights[
+    carrier == "AA", 
+    .(.N), 
+    by = .(origin, dest)
+][
+    order(origin, -dest)
+]
+head(ans)
+```
+
+
+`i`, `j`と同様に**byは表現式をハンドリングできる**．
+これを見ると列名を直接参照しなくてもよい，つまり，
+いわゆる`mutate`のシンタックスが使われていると考えればよい. 
+
+
+```{r}
+
+ans <- flights[, .(N = .N), by = .(dep_delay > 0, arr_delay > 0)]
+ans[1:10]
+
+```
+
+
+
+ところで，平均値をすべての列に計算したいとする. 
+もちろんすべての変数に対して`mean(column)`を記述するのは実践的ではない. 
+
+
+data.tableパッケージでは，スペシャルシンボルの`.SD`を提供している．
+`.SD`は「subset of data」であり，
+byを使い定義した現在のカレントグループのデータそのものを参照する. 
+
+```{r}
+DT[1:10]
+```
+
+
+
+```{r}
+# byで分割された状態で, 彼とデータをプリントしているので
+# 次のような結果となる
+DT[, print(.SD), by = ID][1:10]
+```
+
+上記のように, .SDがデータのサブセットを参照しているので，
+これに対してlapplyを使うことができる. 
+つまり, サブデータセットのカラムごとに演算が可能となる. 
+data.tableがdata.tableでもあることの利点がわかった気がする.
+
+```{r}
+DT[, lapply(Filter(is.numeric, .SD), mean, na.rm = TRUE), by = ID][1:10]
+```
+
+
+ポイントとしては**lapply**が返すのはlistのため，
+`.()`でラップする必要はないということ. 
+
+
+`.SDcols`引数では，カラムネームかカラムのインデックスを受け付けることができる. 
+.SDcolsで指定したカラムだけがSDに含まれてることを補償することができる. 
+カラムの指定は非選択のシンタックスや，colA:colBといったことも可能である. 
+
+```{r}
+flights[
+    carrier == "AA", 
+    lapply(.SD, mean), 
+    by = .(origin, dest, month), 
+    .SDcols = c("arr_delay", "dep_delay")
+][1:10]
+```
+
+最初の２行だけ抽出するということも可能である. 
+
+
+```{r}
+ans <- flights[, head(.SD, 2), by = month]
+head(ans)
+```
+
+
+カラムa, bをIDグループごとに結合するには？
+
+```{r}
+DT[, .(val = c(a, b)), by = ID][1:10]
+```
+
+
+a, b列のすべての値を結合した値を持つがリストとして返すには？
+サマラズしているということだね！
+
+```{r}
+DT[, .(val = list(c(a, b)), by = ID)][1:10]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Reference semanticcs
+
+
+
+add/update/deleteに関する辞書，と`i`, `by`との連携について示す. 
+
+## Data
+
+```{r}
+flights <- fread(path(DATA_DIR, "flights14.csv"))
+flights[1:10]
+
+```
+
+## Introduction
+
+reference semanticeに関するブリーフな議論と，`:=`オペレータを
+使うことができる２つの形を見るなどをしていく. 
+
+
+###  Reference semantics
+
+
+```{r}
+DF <- 
+  data.frame(
+    ID = c("b","b","b","a","a","c"),
+    a = 1:6, 
+    b = 7:12, 
+    c = 13:18
+  )
+
+DF
+```
+
+data.frameで作成したデータに対して，次の２つの操作は
+どちらもすべてのデータがコピーされる. 
+
+```{r}
+print(address(DF))
+print(address(DF$a))
+print(address(DF$c))
+
+# ディープコピーが生じる　その１
+DF$c <- 18:13
+print(address(DF))
+print(address(DF$a))
+print(address(DF$c))
+
+
+# ディープコピーが生じる　その２
+DF$c[DF$ID == "b"] <- 15:13
+print(address(DF))
+print(address(DF$a))
+print(address(DF$c))
+
+
+
+```
+
+というが，バージョン４では事情が異なるよう.
+上の結果を下記にまとめる.
+
+- 全体を参照するアドレスは，その１，その２の操作で変わる
+- 操作していないカラムのアドレスは，どれも同じ
+- 操作したカラムはアドレスが変わる. 
+
+これはどうなのだろうか？結局のところポインターが変わるのがつまり，
+データをディープコピーしているわけではなさそう．
+
+ところで，`:=`オペレータは上記の２つの操作でどちらもインプレイスで処理するため
+ディープコピーを作成しない. らしいが，下記の結果をみると一応，
+列を変更するとその列のアドレスは変更されているのだが・・・？
+
+
+```{r}
+DT <- setDT(DF)
+DT
+```
+
+アドレスが変わる操作と変わらない操作があるようです．
+
+```{r}
+print(address(DT$a))
+
+DT[, a := 10]
+print(address(DT$a))
+
+DT[, a := a * 10]
+print(address(DT$a))
+
+```
+
+
+複数行の処理が行える. 
+
+
+```{r}
+DT[, c("a2", "b2") := lapply(.SD, function (x) x * x), .SDcols = c("a", "b")]
+DT
+```
+
+
+
+```{r}
+library(purrr)
+nrm_v <- DT[, c("b", "b2")] %>% lapply(function(x) sd(x) / mean(x))
+DT[, ":="(b = nrm_v[[1]])]
+DT
+```
+
+ということでえ本編に戻る. 
+
+```{r}
+flights[, ":="(speed = distance / (air_time / 60 ), 
+               delay = arr_delay + dep_delay)]
+
+head(flights)
+```
+
+
+```{r}
+# get all hours in flights
+flights[, sort(unique(hour))]
+
+
+```
+
+24時を0時に直す
+
+```{r}
+flights[hour == 24L, hour := 0L][]
+flights[, sort(unique(hour))]
+```
+
+
+複数の列を掃除に操作するやり方．
+
+```{r}
+in_cols = c("dep_delay", "arr_delay")
+ot_cols = c("max_dep_delay", "max_arr_delay")
+# with = FALSEにするか，c(ot_cols)にしないとそれが列名として解釈されることに注意な
+# ..ot_colsも効果がなかった
+flights[, ot_cols := lapply(.SD, min), by = month, .SDcols = in_cols, with = FALSE][]
+
+
+```
+
+`:=`は参照系なので副作用がある．
+
+```{r}
+foo <- function(DT) {
+  DT[, speed := distance / (air_time/60)]
+  DT[, .(max_speed = max(speed)), by = month]
+}
+ans = foo(flights)
+head(flights[, "speed"]) # speedがある!
+```
+
+```{r}
+head(ans)
+```
+
+
+参照系で処理しないようにするには`copy`関数を使うこと. 
+
+```{r}
+
+flights[, speed := NULL]
+foo <- function(DT) {
+  DT <- copy(DT)                              ## deep copy
+  DT[, speed := distance / (air_time/60)]     ## doesn't affect 'flights'
+  DT[, .(max_speed = max(speed)), by = month]
+}
+ans <- foo(flights)
+names(flights)
+```
+
+
+
+```{r}
+head(ans)
+```
+
+コピーにより副作用なしで演算が出来ていることがわかる. 
+ということだが，いまのバージョンでは上記をシャローコピーで
+実現ができるらしい. 
+
+```{r}
+DT <- data.table(x = 1L, y = 2L)
+DT_n <- names(DT)
+
+
+# add new column 
+DT[, z := 3L]
+
+# DT_n にも追加されている
+DT_n
+```
+
+
+```{r}
+DT_n <- copy(names(DT))
+DT[, w := 4L]
+
+# copyのときにはアップデートされていない
+DT_n
+
+```
+
+ところでggplot2は使えるのか? つかえました. 
+
+```{r}
+library(ggplot2)
+ans %>% 
+  ggplot() + 
+  geom_line(aes(x = month, y = max_speed)) + 
+  theme_dark()
+```
+
+
+
+
+
+# Keys and fas binary search based subset
+
+
+## Data
+
+
+```{r}
+flights <- fread(path(DATA_DIR, "flights14.csv"))
+head(flights)
+```
+
+
+## Introduction 
+
+このチュートリアルの目的は次です. 
+
+- keyとはなにか，高速バイナリーサーチに使うにはどうすれば良いのか
+- keyを使った結合
+- multとnomatchの使い方
+- keyを設定するメリットとはなにか
+
+
+## Keys 
+
+### What is a key?
+
+ここまでは, `i`においてデータのサブセットを抽出するとき，
+論理式，行番号，`order`を使ったものを紹介してきた．
+ここでは，`key`を使った高速な処理を紹介する. 
+
+とりあえず，データフレームをつくってみる. 
+
+```{r}
+set.seed(1L)
+DF <- data.frame(
+  ID1 = sample(letters[1:2], 10, TRUE), 
+  ID2 = sample(1:3, 10, TRUE), 
+  val = sample(10), 
+  stringsAsFactors = FALSE, 
+  row.names = sample(LETTERS[1:10])
+)
+DF
+
+```
+
+```{r}
+rownames(DF)
+```
+
+data.frameにおいてもrownameを使いデータのサブセットを作成する
+ことが可能である. 
+
+```{r}
+DF["C", ]
+```
+
+上記の例からrownameというのは，行番号へのインデックスの
+役割があることがわかる. 
+ただし，ユニークである必要がある．
+
+ここで，data.tableに変換してみる. 
+
+```{r}
+DT <- as.data.table(DF)
+DT
+```
+
+```{r}
+rownames(DT)
+```
+
+
+data.tableに変換することでrow nameはリセットされていることがわかる. 
+data.tableは決してrow nameは使わない. 
+data.tableはdata.frameを継承しているため，
+row name属性を有しているが，使わない．この理由は後でみられる．
+もしrow nameを保持したいときには`keep.rownames = TRUE`という
+引数を使うこと. 
+
+data.tableではkeysを設定，利用する. 
+keysは超高速なrownamesと考えれば良い. 
+keysの特徴は次である. 
+
+
+- keyは単一，あるいは，複数のカラムに設定できる
+  - 設定できるデータ型は, integer, numeric, cahracter, factor, integer64など
+  - list, complexには設定できない
+- ユニークであることは強制されない
+  - keyでソートするとき，同じkeyが連続して現れるようになる
+- keyの設定は２ステップである
+  - 参照形式で与えられれたカラムに基づき常に昇順で行を物理的にreorderする
+  - 使ったカラムはkeyカラムとしてフラグが立ち，sorted属性になる
+  
+一般的にはkeyは１つのカラムに対して設定する．
+
+### set, get and use keys on data.table
+
+```{r}
+setkey(flights, origin)
+head(flights)
+```
+
+- `setkeyv`を使うと，文字列ベクトルを使いkeyを設定することが可能
+- 上記のようにinplaceで設定が行える
+- 設定したカラムを使いreorderされている
+- data.table関数でインスタンスを作成するときにkey引数で直接指定可能
+
+
+keyが設定されたdata.tableでは, `.()`を`i`で使い，
+サブセットを作成することが可能となる. 
+
+```{r}
+flights[.("JFK")][1:5]
+```
+
+```{r}
+key(flights)
+```
+
+
+
+
+### Keys and multiple columns
+
+
+
+```{r}
+setkey(flights, origin, dest)
+head(flights)
+```
+
+```{r}
+setkeyv(flights, c("origin", "dest"))
+
+key(flights)
+```
+
+２つのkeyを設定したのでそれぞれを指定したサブセットが作成可能. 
+
+```{r}
+
+flights[.("JFK", "MIA")][1:5]
+
+```
+上記の処理はまず"JFK"をoriginから探し，
+その後に"MIA"をdestから探索している. 
+
+２つ目のkeyだけを使いサブセットを作るには１つ工夫が必要となる. 
+
+```{r}
+flights[.(unique(origin), "MIA")][1:5]
+```
+## Combining keys with j and by
+
+### Select in j
+
+
+```{r}
+key(flights)
+```
+
+```{r}
+flights[.("LGA", "TPA"), .(arr_delay)]
+```
+
+```{r}
+flights[.("LGA", "TPA"), .(arr_delay)][order(-arr_delay)][1:5]
+```
+
+
+もちろん`j`における演算と組み合わせることができる. 
+
+```{r}
+flights[.("LGA", "TPA"), max(arr_delay)]
+```
+
+```{r}
+# get all "hours" in flights
+flights[, sort(unique(hour))]
+
+```
+
+すでにやったexampleであるが，keyによる参照においても次のように
+サブセットに対する処理が可能. 
+
+```{r}
+setkey(flights, hour)
+key(flights)
+```
+
+```{r}
+flights[.(24), hour := 0L]
+key(flights)
+```
+
+
+上記の処理ではkeyに使ったカラム`hour`を修正した．
+これにより`hour`の昇順の整列がくずれた．
+よって，keyはNULLを設定するという方法を使い，
+自動で取り除かれている. 
+
+```{r}
+flights[, sort(unique(hour))]
+```
+
+
+集計処理についても同様にkeyを駆使して処理することが可能である. 
+
+```{r}
+setkey(flights, origin, dest)
+key(flights)
+```
+
+```{r}
+ans <- flights["JFK", .(max_dep_delay = max(dep_delay)), keyby = month]
+head(ans)
+```
+
+```{r}
+# 自動でkeyが設定されている
+key(ans)
+```
+
+
+## Additional arguments mult and nomatch
+
+### mutl argument
+
+任意のクエリーにおいて，すべての行を返すのか，
+最初あるいは最後の行を返すのかを指定することができる. 
+
+```{r}
+flights[.("JFK", "MIA"), mult = "first"]
+```
+
+
+```{r}
+# JFK-XNAはデータがないのでNAが返されている
+flights[.(c("JFK", "LGA", "EWR"), "XNA"), mult = "last"]
+```
+
+### the nomatch argument
+
+マッチしないデータを除くことができる. 
+
+
+```{r}
+flights[.(c("JFK", "LGA", "EWR"), "XNA"), mult = "last", nomatch = NULL]
+```
+
+
+## binary serch vs vectors scan 
+
+ところで，keyのメリットはなんなのだろうか. 
+
+```{r}
+# このようなサブセットの作成はベクトルスキャンでも可能である
+identical(
+  flights[.("JFK", "MIA")], 
+  flights[origin == "JFK" & dest == "MIA"]
+)
+  
+```
+
+記法が短いという意味合いもあるが，
+端的にいって高速であることがアドバンテージである. 
+
+```{r}
+set.seed(2L)
+N = 2e7L
+DT = data.table(x = sample(letters, N, TRUE),
+                y = sample(1000L, N, TRUE),
+                val = runif(N))
+print(object.size(DT), units = "Mb")
+```
+
+```{r}
+t1 <- system.time(ans1 <- DT[x == "g" & y == 877L])
+t1
+```
+
+```{r}
+head(ans1)
+
+```
+
+```{r}
+
+dim(ans1)
+```
+
+
+
+```{r}
+setkeyv(DT, c("x", "y"))
+key(DT)
+```
+
+```{r}
+t2 <- system.time(ans2 <- DT[.("g", 877L)])
+t2
+```
+
+```{r}
+head(ans2)
+```
+
+```{r}
+dim(ans2)
+```
+
+
+```{r}
+identical(ans1$val, ans2$val)
+```
+
+
+このように高速になるのは，
+データがソート済みになっていることで
+バイナリーサーチが使えるためである. 
+通常のベクトルスキャンでは毎回すべての要素との比較が行われており，
+なんどもサブセットを作成する情況においては非効率である. 
+
+
+
+
+# Secondary indices and auto indexing
+
+
+```{r}
+flights <- fread(path(DATA_DIR, "flights14.csv"))
+head(flights)
+
+```
+
+```{r}
+
+dim(flights)
+
+```
+
+## Introduction 
+
+- 第２インデックスとその有用性について
+- 高速なサブセット化を`on`を使っておこなう
+  - テンポラリーがだ再利用が可能
+- 自動インデックス，自動第２インデックス
+
+## Secondary indices
+
+
+### What are secondary indices
+
+第二インデックスとは，keyと似たものであるが次の点が異なる
+
+- 物理的に行の順番を変更するわけでない
+  - index属性で管理されている
+- 1つ以上の第２インデックスを与えることができる
+
+
+### Set and get secondary indices
+
+```{r}
+setindex(flights, origin)
+head(flights)
+```
+
+
+```{r}
+names(attributes(flights))
+```
+
+
+- setindex / setindexvで設定する
+- 物理的に行の番号が変更されたわけでｈない
+- index属性が追加されている
+- `setindex(flights, NULL)`によりインデクスは削除
+
+```{r}
+indices(flights)
+```
+
+```{r}
+setindex(flights, origin, dest)
+# ２つ目が少しかわっているが複数のインデックスが作成できることがわかる
+indices(flights)
+```
+
+ところでなぜセカンダリーインデックスが必要であるのか？
+
+１つにはデータを物理的に並び変えるのはコストが大きい場合があり，
+常に理想的な処理であるとは言えない. 
+たとえば参照するカラムとkeyが異なる場合，
+そのたびにリオーダーが発生する. 
+このような場合にセカンダリーが有効になる. 
+
+セカンダリーは，複数のインデックスを，属性として保持することが
+できるのでリオーダーの時間を節約することができる. 
+`on`引数は自動でセカンダリーを作成する．
+
+## Fast subsetting using on arguent and secondary indices
+
+```{r}
+flights["JFK", on = "origin"][1:5]
+```
+
+上記の処理でオンザフライでインデックスが作成されている．
+処理速度はバイナリーサーチを用いた場合と同様である．
+ただし，インデックスは自動では保存されていない．
+これについては今後変更される予定である. 
+
+もし既にセカンダリーを`setindex`で作成しているときには，
+`on`はセカンダリーを再利用する. 
+このことは`verbose= TRUE`によりみることができる. 
+
+```{r}
+setindex(flights, origin)
+flights["JFK", on = "origin", verbose = TRUE][1:5]
+```
+
+
+カラムが複数あるときにはベクトルで指定すればよい. 
+
+```{r}
+flights[.("JFK", "LAX"), on = c("origin", "dest")][1:5]
+```
+
+`j`との組み合わせは既にみてきた`key`がある場合の
+組み合わせと同じである. 
+属性に`index`が与えられることだけに注意する. 
+
+```{r}
+flights[.("LGA", "TPA"), .(arr_delay), on = c("origin", "dest")][1:5]
+```
+
+
+チャイニングも同じである. 
+
+
+```{r}
+flights[
+    .("LGA", "TPA"), .(arr_delay), on = c("origin", "dest")
+  ][
+  order(-arr_delay)][
+    1:5
+  ]
+```
+
+サマライズも同じ. 
+
+```{r}
+flights[
+  .("LGA", "TPA"), 
+  max(arr_delay), 
+  on = c("origin", "dest")
+]
+```
+
+
+サブアサインも同じ. 
+
+```{r}
+flights[, sort(unique(hour))]
+```
+
+
+```{r}
+flights[.(24L), hour := 0L, on = "hour"]
+flights[, sort(unique(hour))]
+```
+
+
+集計も同じ. `i`にインデックス記法を使わない場合には，
+`on`は必要ない．
+`keyby`はkeyを与えているのではなくて，順序化したグループ化の変数で，
+自動でkeyが与えられる. 
+ちなみに`origin`カラムはなくなるのでインデックスは付いていない．．．
+
+```{r}
+ans <- flights[
+  "JFK", 
+  max(dep_delay), 
+  keyby = month, 
+  on = "origin"
+]
+ans[1:5]
+```
+
+```{r}
+key(ans)
+```
+
+```{r}
+indices(ans)
+```
+
+
+`mult`も正しく動く. 
+
+```{r}
+flights[c("BOS", "DAY"), on = "dest", mult = "first"]
+```
+
+`nomatch`も動く.
+
+```{r}
+flights[.(c("LGA", "JFK", "EWR"), "XNA"), mult = "last", 
+        on = c("origin", "dest"), 
+        nomatch = NULL]
+```
+
+
+
+## AUto indexing
+
+```{r}
+set.seed(1L)
+dt = data.table(x = sample(1e5L, 1e7L, TRUE), y = runif(100L))
+print(object.size(dt), units = "Mb")
+```
+
+```{r}
+names(attributes(dt))
+```
+```{r}
+(t1 <- system.time(ans <- dt[x == 989L]))
+```
+```{r}
+head(ans)
+```
+
+
+```{r}
+names(attributes(dt))
+```
+
+```{r}
+# 自動で作成されている
+indices(dt)
+```
+
+1度目の参照時間はインデックスを作成する時間と，
+サブセットを抽出する時間の和になっている．
+自動インデックスは`options(datatable.auto.index = FALSE)`により
+停止することも出来るが，実際にはベクタースキャンよりも
+２回目以降は下に示すようにより高速に行える. 
+現在のところ自動インデックスは`==`と`%in%`の
+場合に設定される．
+
+```{r}
+(t2 <- system.time(dt[x == 989L]))
+```
+
+```{r}
+system.time(dt[x %in% 1989:2012])
+```
+
+```{r}
+setindex(dt, NULL)
+# <= のようなオペレータではインデックスは作成されない
+dt[x <= 2000][1:5]
+indices(dt)
+```
+
+
+
+
+
+
+
+
+# Efficient reshapng using data.tables
+
+## Data
+
+```{r}
+input <- path(DATA_DIR, "flights14.csv")
+flights <- fread(input)
+flights[1:10]
+```
+
+
+
+## Introduction
+
+`melt`と`dcast`はdata.tableのための縦横変換関数であり，
+１０GBを超えるin memoryのデータを想定ｓちえ実装されていｒ. 
+
+
+## Default functionality
+
+### melting 
+
+```{r}
+s1 <- "family_id age_mother dob_child1 dob_child2 dob_child3
+1         30 1998-11-26 2000-01-29         NA
+2         27 1996-06-22         NA         NA
+3         26 2002-07-11 2004-04-05 2007-09-02
+4         32 2004-10-10 2009-08-27 2012-07-21
+5         29 2000-12-05 2005-02-28         NA"
+DT <- fread(s1)
+DT
+```
+
+meltを使い再構築する. 
+
+```{r}
+DT.m1 <- melt(
+  DT, 
+  
+  # IDとして使う変数(age_motherはいつ年齢？)
+  id.vars = c("family_id", "age_mother"), 
+  # 観測値の値として使う変数
+  measure.vars = c("dob_child1", "dob_child2", "dob_child3")
+)
+DT.m1
+```
+
+`melt`と同じに名前を与える. 
+
+
+```{r}
+DT.m1 <- melt(
+  DT, 
+  # IDとして使う変数(age_motherはいつ年齢？)
+  id.vars = c("family_id", "age_mother"), 
+  # 観測値の値として使う変数
+  measure.vars = c("dob_child1", "dob_child2", "dob_child3"), 
+  # 観測値の変数名
+  variable.name = "child", 
+  # 観測値の値の変数名
+  value.name = "dob"
+)
+DT.m1
+```
+
+
+### dcasting
+
+
+
+```{r}
+dcast(DT.m1, family_id + age_mother ~ child, value.var = "dob")
+```
+
+
+横持ちに変換する際には，データを集計することが可能である. 
+
+```{r}
+dcast(
+  DT.m1, 
+  family_id ~ ., 
+  fun.agg = function(x) sum(!is.na(x)), 
+  value.var = "dob"
+)
+```
+
+これは通常は次のように処理が行える. 
+
+```{r}
+DT.m1[!is.na(dob), .(.N), keyby = "family_id"]
+```
+
+
+
+## Limitations in current melt/dcast approaches
+
+
+簡単に記述できない場合を考えて見る. 
+
+
+```{r}
+s2 <- "family_id age_mother dob_child1 dob_child2 dob_child3 gender_child1 gender_child2 gender_child3
+1         30 1998-11-26 2000-01-29         NA             1             2            NA
+2         27 1996-06-22         NA         NA             2            NA            NA
+3         26 2002-07-11 2004-04-05 2007-09-02             2             2             1
+4         32 2004-10-10 2009-08-27 2012-07-21             1             1             1
+5         29 2000-12-05 2005-02-28         NA             2             1            NA"
+DT <- fread(s2)
+DT
+```
+
+dobとgenderを観測値の変数としてまとめることを考える. 
+いまある機能を使うと次のように,
+１度全体を融かして，変数部分だけ分離させるという方法で記述ができる. 
+
+```{r}
+DT.m1 <- melt(DT, id = c("family_id", "age_mother"))
+DT.m1[, c("variable", "child") := tstrsplit(variable, "_", fixed = TRUE)]
+DT.m1[1:5]
+```
+
+```{r}
+DT.c1 <- dcast(DT.m1, family_id + age_mother + child ~ variable, 
+               value.var = "value")
+
+DT.c1[1:10]
+```
+
+
+しかし，この方法には次の問題点がある. 
+
+
+- dob, genderの変数の型が異なる場合の対処
+- 中間変数variableの意図が不明確
+
+`stats::reshape`この問題を簡単に解決してくれる．
+(自分で試してみるべし！とのこと)
+
+
+## Enhanced functionality
+
+### Enhanced melt
+
+カラムのリストをmeasure.varsに渡すことで解決する. 
+
+```{r}
+colA = paste("dob_child", 1:3, sep = "")
+colB = paste("gender_child", 1:3, sep = "")
+DT.m2 = melt(DT, 
+             measure = list(colA, colB), 
+             value.name = c("dob", "gender"))
+DT.m2
+```
+
+
+すべてを指定することが難しい場合には`patterns`を使うこと. 
+
+```{r}
+DT.m2 <- 
+  melt(
+    DT, 
+    # measureでもいいみたいだが，上との対応のため，measure.varsを使う
+    # 本当は用途が異なる可能性が多分にある・・・
+    measure.vars = patterns ("^dob", "^gender"), 
+    value.name = c("dob", "gender")
+  )
+DT.m2
+```
+
+
+### Enhanced dcast
+
+```{r}
+DT.c2 <- 
+  dcast(
+    DT.m2, 
+    family_id + age_mother ~ variable, 
+    value.var = c("dob", "gender")
+  )
+DT.c2
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Cheet Sheet
+
+cheet [sheet](./D/datatable.pdf)を一通りなめる． 
+
+
+```{r}
+dt <- data.table(
+  a = 1:5, 
+  b = 6:10, 
+  c = c("a", "a", "b", "b", "b")
+)
+```
+
+
+##  Manipulate columns with j
+
+### Extract
+
+```{r}
+dt[, c(2)]
+```
+
+
+```{r}
+dt[, !2]
+```
+
+
+```{r}
+dt[, .(b, c)]
+```
+
+
+```{r}
+dt[, c("a", "b")]
+```
+
+文字だけの場合にはどちらでも良い．
+
+```{r}
+dt[, "b"]
+```
+
+
+
+文字列を値とした変数を使う場合はやり方が二通りある. 
+
+
+```{r}
+cln <- c("a", "b")
+dt[, ..cln]
+```
+
+```{r}
+dt[, cln, with = FALSE]
+```
+
+
+
+
+
+### summarise
+
+代表値を求める関数を列の位置で使うことができる. 
+
+
+```{r}
+dt[, sum(a)]
+```
+```{r}
+dt[, .(a = sum(a))]
+```
+
+### compute columns
+
+inplaceで変更する. 
+
+
+```{r}
+dt[, d := LETTERS[1:5]]
+dt
+```
+
+```{r}
+dt[, a := a * 10]
+dt
+```
+
+```{r}
+dt[a  > mean(a), b := a + b]
+dt
+```
+
+複数列に対して演算するときには少し複雑. 
+
+```{r}
+dt[a > mean(a), ":="(c = toupper(c), d = tolower(d))]
+dt
+```
+
+### DELETE COLUMN
+
+```{r}
+dt[, d := NULL]
+dt
+```
+
+### convert column type
+
+```{r}
+dt[, b := as.complex(b)]
+dt
+```
+
+## Group according to by
+
+
+byは，.SDに適用した結果を`bind_rows`するイメージ
+
+
+
+```{r}
+dt[, .SD, by = .(c)]
+```
+
+プリントすると，.SDがそれぞれdata.tableであることが
+わかる. 
+
+```{r}
+dt[, print(.SD), by = c]
+```
+
+
+
+```{r}
+# あまり意味のない処理だけど
+dt[, .SD[,"b"], by = c]
+```
+
+集約処理も簡単に行える. 
+
+
+```{r}
+dt[, .(c = sum(b)), by = a]
+dt
+```
+
+```{r}
+# .SDはdata.tableなので1行目のデータをデータフレームが参照
+dt[, .SD[1], by = a]
+```
+
+
+```{r}
+dt[, .SD[.N], by = a]
+dt
+```
+
+
+## Chaining
+
+`[ ]`演算子を重ねていくことでチェインできる. 
+byは適用されないもよう. 
+
+```{r}
+dt[, .SD, by = c][, sum(a)]
+```
+
+
+## Function for data.tables
+
+### REORDER
+
+```{r}
+setorder(dt, -b, a)
+dt
+```
+
+### UNIQUE ROWS
+
+
+```{r}
+# byを指定しないとすべての列が使われる
+unique(dt, by = c("a", "b"))
+dt
+```
+
+### RENAME COLUMNS
+
+```{r eval=FALSE}
+setnames(dt, c("a"), c("a_new"))
+dt
+```
+
+ユニークなカラム数を見極める. 
+
+```{r}
+uniqueN(dt)
+```
+
+```{r}
+dt[, .(n = uniqueN(.SD)), by = c]
+```
+
+
+### SET KEYS
+ 
+`dt[.(value), ]`を使ったカラム指定における
+高速な繰り返し参照を実現する．
+また，カラムを指定しないマージ`dt_a[dt_b]`の高速化にも繋がる. 
+
+```{r}
+setkey(dt, a, b)
+dt
+```
+
+```{r}
+key(dt)
+```
+
+
+## Combine data.table
+
+### JOIN
+
+```{r}
+dt1 <- data.table(
+  a = 1:3,
+  b = c("a", "b", "c")
+)
+dt2 <- data.table(
+  x = 3:1,
+  y = c("b", "c", "a")
+)
+```
+
+```{r}
+# 新しいインスタンスが作成されている
+# dt1, dt2には副作用はない
+dt1[dt2, on = .(b = y)]
+```
+
+
+```{r}
+dt_a <- copy(dt1)[, c := c(7, 5, 6)]
+dt_b <- copy(dt2)[, z := c(4, 5, 8)]
+
+dt_a[dt_b, on = .(b = y, c > z)]
+```
+
+
+### ROLLING JOIN
+
+```{r}
+dt_a <-
+  data.table(
+    a    = c(1, 2, 3, 1, 2), 
+    id   = c("A", "A", "A", "B", "B"), 
+    date = seq(as.Date("2020/1/1"), by = "3 days", length.out = 5)
+  )
+
+dt_a
+```
+
+```{r}
+dt_b <- 
+  data.table(
+    b = c(1, 1), 
+    id = c("A", "B"), 
+    date = seq(as.Date("2020/1/2"), by = "2 days", length.out = 2)
+  )
+dt_b
+```
+
+
+通常のジョインだとマッチはしない．
+
+```{r}
+dt_a[dt_b, on = .(id = id, date = date)]
+```
+
+ローリングだと最も近い直前の値でマッチすることが出来る. 
+マッチしないとNAになっていることがわかる. 
+
+```{r}
+dt_a[dt_b, on = .(id = id, date = date), roll = TRUE]
+```
+
+### BIND
+
+```{r}
+rbind(dt1, dt1)
+```
+
+
+```{r}
+cbind(dt1, dt1)
+```
+
+
+
+## Reshape a data.tabel
+
+### RESHAPE TO WIDE FORMART
+
+```{r}
+dt <- 
+  data.table(
+    id = c("A", "A", "B", "B"), 
+    y  = c("x", "z", "x", "z"), 
+    a  = c(1, 2, 1, 2), 
+    b  = c(3, 4, 3, 4)
+  )
+dt
+```
+
+```{r}
+dt_wide <- 
+  dcast(
+    dt, 
+    id ~ y, 
+    value.var = c("a", "b")
+  )
+dt_wide
+```
+
+### RESHAPE TO LONG FORMART
+
+```{r}
+dt_long <- 
+  melt(
+    dt_wide, 
+    id.vars = c("id"), 
+    measure.vars = patterns("^a"), 
+    variable.name = "y", 
+    value.name = c("a")
+  )
+dt_long
+```
+
+複数行に対してもできるが，variableが因子になるのに注意. 
+
+```{r}
+  melt(
+    dt_wide, 
+    id.vars = c("id"), 
+    measure.vars = patterns("^a", "^b"), 
+    variable.name = "y", 
+    value.name = c("a", "b")
+  )
+```
+
+
+## Apply function to cols
+
+```{r}
+dt[, lapply(.SD, mean), .SDcols = c("a", "b")]
+```
+
+
+## Sequantial rows
+
+
+### ROW IDS
+
+```{r}
+dt[, c:=1:.N, by = b]
+dt
+```
+
+### LAG & LEAD
+
+```{r}
+dt[, c:=shift(a, 1), by = b][order(a, b)]
+```
+```{r}
+dt[, c:=shift(a, 1, type = "lead"), by= b][order(a, b)]
+dt
+```
+
+
+
+
+
+# Examples
+
+[ここ](https://rdatatable.gitlab.io/data.table/reference/data.table.html#examples)の
+Examplesから，
+ここまでであまり理解していなかった記述方法について試す. 
+
+```{r}
+DF = data.frame(x=rep(c("b","a","c"),each=3), y=c(1,3,6), v=1:9)
+DT = data.table(x=rep(c("b","a","c"),each=3), y=c(1,3,6), v=1:9)
+
+DF
+
+```
+
+```{r}
+DT
+```
+
+
+
+```{r}
+# 環境に存在する data.tableを一覧
+tables()
+```
+
+
+
+
+## fast ad hoc row subsets (subsets as joins)
+
+```{r}
+DT[["v"]]
+```
+
+```{r}
+DT[, sum(v), by = x]
+```
+
+
+```{r}
+DT[, sum(v), keyby = x]
+```
+
+
+
+```{r}
+DT["a", on = "x"] # same as DT[x == "a"]
+```
+
+```{r}
+DT["a", on = .(x)]
+```
+
+
+```{r}
+DT[.("a"), on = "x"]
+```
+
+```{r}
+indices(DT)
+```
+
+
+
+```{r}
+# これは内部でバイナリーサーチが行われてる
+DT[x == "a"]
+```
+
+```{r}
+DT[.("b", 3L), on = c("x", "y")]
+```
+
+```{r}
+# データがない部分も参照できる
+DT[.("b", 1:2), on = c("x", "y")]
+```
+
+```{r}
+# ローリグ参照
+# 欠損するときには，それよりも前の値を参照
+DT[.("b", 1:2), on = c("x", "y"), roll = Inf]
+```
+
+```{r}
+# ローリング参照
+# 欠損するときには，それよりも後の値を参照
+DT[.("b", 1:2), on = c("x", "y"), roll = - Inf]
+```
+
+```{r}
+DT[.("b", 1:2), on = c("x", "y"), roll = 0]
+```
+
+
+```{r}
+DT[.("b", 1:2), on = c("x", "y"), roll = 1]
+```
+
+
+
+```{r}
+DT[x != "a", sum(v), keyby = x]
+```
+
+
+```{r}
+DT[!"a", .(s = sum(v)), by = .EACHI, on = "x"]
+```
+
+## joins as subsets
+
+
+
+```{r}
+X = data.table(x=c("c","b"), v=8:7, foo=c(4,2))
+X
+```
+
+
+```{r}
+# right join
+DT[X, on = "x"]
+```
+
+
+
+
+```{r}
+# left join
+# 向きが直感と逆な気もする．．．
+# イメージとしてはDTのxカラムを，Xから参照するということだろうか．．？
+X[DT, on = "x"]
+```
+
+
+
+
+```{r}
+# inner join 
+
+DT[X, on = "x", nomatch = NULL]
+```
+
+
+
+```{r}
+# anti join
+DT[!X, on = "x"]
+```
+
+```{r}
+DT[X, on = c(y = "v")]
+```
+
+
+```{r}
+# 論理ベクトルを返す文字列で指定することもできる
+DT[X, on = "y==v"]
+```
+
+```{r}
+# つまりは, on は変数名でも良いし，ベクトルでもよい
+# ということはやはり, on はmutateのシンタックスという理解をしておけばおよい.
+DT[X, on = .(y <= foo)]
+```
+
+
+```{r}
+DT[X, on=c("y<=foo")][order(x)]
+```
+
+
+```{r}
+DT[X, on=.(y>=foo)] 
+```
+
+
+```{r}
+DT[X, on = .(x, y <= foo)]
+```
+
+
+
+```{r}
+# 上記の結果を名前を設定しながら, 
+DT[X, .(x, y, x.y, v), on = .(x, y >= foo)]
+```
+
+```{r}
+DT[X, on = "x", mult = "first"]
+```
+
+
+`.EACHI`の便利なところかな?
+よくわからないけど，on と同じ変数でbyされるということな．
+
+```{r}
+DT[X, .SD, on = c("x")]
+```
+
+
+```{r}
+DT[X, .SD, by = .EACHI, on = c("x")]
+```
+
+
+
+```{r}
+# xでbyされている
+DT[X, sum(v), by = .EACHI, on = c("x")]
+```
+
+
+
+
+
+```{r}
+# 演算としては，Xの変数も使える.
+DT[X, sum(v) * foo, by = .EACHI, on = "x"]
+```
+
+
+```{r}
+# i.cはXのvである. 
+# このためsum(v)と次元があっている
+DT[X, sum(v) * i.v, by= .EACHI, on = "x"]
+```
+
+
+
+
+## setting keys
+
+
+```{r}
+kDT = copy(DT)                        # (deep) copy DT to kDT to work with it.
+setkey(kDT,x)                         # set a 1-column key. No quotes, for convenience.
+setkeyv(kDT,"x")                      # same (v in setkeyv stands for vector)
+v="x"
+setkeyv(kDT,v)                        # same
+# key(kDT)<-"x"                       # copies whole table, please use set* functions instead
+haskey(kDT)                           # TRUE
+#> [1] TRUE
+key(kDT)           
+```
+
+```{r}
+# データ行がリオーダーされている
+kDT
+```
+
+
+
+```{r}
+# keyが設定されていればバイナリーサーチが使える
+kDT["a"]
+```
+
+
+```{r}
+indices(kDT)
+```
+
+
+```{r}
+kDT["a", on = "x"]
+```
+
+```{r}
+indices(kDT)
+```
+
+
+```{r}
+ # get sum(v) for each i != "a"
+kDT[!"a", sum(v), by= .EACHI]
+```
+
+
+
+```{r}
+# 配列にしておけばkeyを設定していなくても動く
+kDT[.("a")]
+```
+
+
+
+
+
+## more on special symbols
+
+```{r}
+DT[ , .SD, .SDcols = patterns('^[xv]')]
+```
+
+
+```{r}
+# .Iはrow number
+DT[, .I]  
+```
+```{r}
+DT[, .I[1], by=x]  
+```
+
+
+
+```{r}
+# .GRPはグループナンバー
+DT[, .GRP, by = x]
+```
+
+```{r}
+DT[, grp := .GRP, by = x]
+DT
+```
+
+
+```{r}
+DT[, .BY, by= .(x, y)]
+```
+
+
+```{r}
+# .BYはグープごとのシングルトン
+DT[, dput(.BY), by = .(x, y)]
+```
+
+これはなにをしているのかがわかっていない・・
+
+```{r}
+X[, DT[.BY, y, on = "x"], by= x]
+```
+
+```{r}
+DT[, {
+  # write each group to a different file
+  fwrite(.SD, file.path(tempdir(), paste0('x=', .BY$x, " y = ", .BY$y, '.csv')))
+}, by=.(x, y)]
+#> Empty data.table (0 rows and 1 cols): x
+dir(tempdir())
+```
+
+
+
+
+## advanced usage
+
+```{r}
+DT = data.table(
+  x=rep(c("b","a","c"),each=3), 
+  v=c(1,1,1,2,2,1,1,2,2), 
+  y=c(1,3,6), 
+  a=1:9, b=9:1)
+
+DT[, sum(v), by=.(y%%2)] 
+```
+
+```{r}
+DT[, sum(v), by=.(bool = y%%2)]
+```
+
+
+```{r}
+DT[, list(MySum=sum(v),
+          MyMin=min(v),
+          MyMax=max(v)),
+    by=.(x, y%%2)]     
+```
+
+
+```{r}
+DT[, .(a = .(a), b = .(b)), by=x]
+```
+
+
+
+```{r}
+DT[, .(seq = min(a):max(b)), by=x]
+```
+
+一時変数が欲しい場合には，`j`で波括弧を使えば良い. 
+
+```{r}
+DT[, {tmp <- mean(y);
+      .(a = a-tmp, b = b-tmp)
+      }, by=x] 
+```
+
+```{r}
+                                 # expression. TO REMEMBER: every element of
+                                      # the list becomes a column in result.
+pdf("new.pdf")
+DT[, plot(a,b), by=x]                 # can also plot in 'j'
+#> Empty data.table (0 rows and 1 cols): x
+dev.off()
+#> pdf 
+#>   2 
+# file.remove("new.pdf")
+```
+```{r}
+DT
+```
+```{r}
+DT[, rleid := rleid(DT$v)]
+```
+
+
+```{r}
+# 上記をみると
+# rleidはデータの切り替わり順!!!
+DT[, c(.(y=max(y)), lapply(.SD, min)), by=rleid(v), .SDcols=v:b]
+```
+
+```{r}
+?rleid
+```
+
+```{r}
+
+DT = data.table(grp=rep(c("A", "B", "C", "A", "B"), c(2,2,3,1,2)), value=1:10)
+DT
+
+```
+
+```{r}
+rleid(DT$grp) # get run-length ids
+```
+
+
+```{r}
+rleid(DT$grp, prefix="grp") # prefix with 'grp'
+
+
+```
+
+
+```{r}
+# get sum of value over run-length groups
+DT[, sum(value), by=.(grp, rleid(grp))]
+DT[, sum(value), by=.(grp, rleid(grp, prefix="grp"))]
+```
+
+
+# My Note
+
+公式のチュートリアルに出てこない関数たちの調査結果. 
+
+- rowid
+- fsetdiff
+
+## functions
+
+### rowid
+
+引数が切り替わるごとに1から番号振りを始める
+
+
+
+```{r}
+DT = data.table(x=c(20,10,10,30,30,20), y=c("a", "a", "a", "b", "b", "b"), z=1:6)[]
+DT
+```
+
+
+```{r}
+rowid(DT$x) # 1,1,2,1,2,2
+```
+
+```{r}
+DT[,  z := rowid(DT$y)]
+DT
+```
+
+
+```{r}
+?rowid
+```
+
+
+```{r}
+rowidv(DT, cols="x") # same as above
+
+rowid(DT$x, prefix="group") # prefixed with 'group'
+
+rowid(DT$x, DT$y) # 1,1,2,1,2,1
+
+```
+
+```{r}
+rowidv(DT, cols=c("x","y")) # same as above
+DT[, .(N=seq_len(.N)), by=.(x,y)]$N # same as above
+
+# convenient usage with dcast
+dcast(DT, x ~ rowid(x, prefix="group"), value.var="z")
+```
+
+
+
+### fsetdiff
+
+集合演算が行えるようです. 
+
+```{r}
+x  = data.table(c(1,2,2,2,3,4,4))
+x2 = data.table(c(1,2,3,4)) # same set of rows as x
+y  = data.table(c(2,3,4,4,4,5))
+```
+
+
+`all=FALSE`という引数がある．
+この場合には，重複した行は削除されれる．
+`all=TRUE`のとき，は個別にみるイメージである. 逆を言えば，
+`all=FALSE`は本当に集合として処理を行うイメージである. 
+
+```{r}
+fintersect(x, y)            # intersect
+
+```
+
+```{r}
+# あくまで交差集合なので，xよりも数が多いyの4などにおいては，
+# yの数が残されないことに注意する
+fintersect(x, y, all=TRUE)  # intersect all
+
+```
+
+```{r}
+fsetdiff(x, y)              # except
+```
+
+```{r}
+fsetdiff(x, y, all=TRUE)    # except all
+```
+
+
+```{r}
+funion(x, y)                # union
+```
+
+```{r}
+funion(x, y, all=TRUE)      # union all
+```
+
+```{r}
+fsetequal(x, x2, all=FALSE) 
+```
+
+```{r}
+fsetequal(x, x2)            # setequal all
+```
+
+```{r}
+
+```
+
+
+### foverlaps
+
+ぱっと見だけど区間の話をしているようにみえる. 
+xのstart/endの間において，yのstart/endの間がラップしているのかどうかを判定している. 
+あんまり使いどころがわかっていないが，
+バイナリーサーチで行われるらしいので必要になったら高速に処理が可能である. 
+
+
+```{r}
+x = data.table(start=c(5,31,22,16), end=c(8,50,25,18), val2 = 7:10)
+y = data.table(start=c(10, 20, 30), end=c(15, 35, 45), val1 = 1:3)
+setkey(y, start, end)
+foverlaps(x, y, type="any", which=TRUE)
+```
+
+これはオーバーラップのなかでも，包含を対象としている. 
+
+```{r}
+foverlaps(x, y, type = "within")
+```
+
+
+
+### uniqueN
+
+```{r}
+a <- sample(letters[1:5], 10, replace = TRUE)
+uniqueN(a)
+```
+
+### first
+
+```{r}
+first(1:10)
+```
+
+### frollmean
+
+```{r}
+frollmean(1:10, n = 3, fill = Inf, align = "center")
+```
+
+
+### transpose
+
+```{r}
+DT = data.table(x=1:5, y=6:10)
+transpose(DT)
+```
+
+### truelength
+
+通常の`length`だと，カラム数を返すのだけど，
+実際にはアロケートされている列の数が異なるので，
+アロケートされている分までを出力する. 
+
+```{r}
+DT = data.table(a=1:3,b=4:6)
+length(DT)                 # 2 column pointer slots used
+truelength(DT)   
+```
+
+```{r}
+setalloccol(DT, 2048)
+length(DT)                 # 2 used
+truelength(DT)    
+```
+
+
+### tstrsplit
+
+`traspose(strsplit())`と同じ. 
+つまり，は分割した文字列を列ごとに保持するようになる. 
+
+```{r}
+# names引数があるのでそれを使うことも良い
+a <- data.table(
+  x = c("x_1", "x_2", "x")
+)[, c("x", "n") := tstrsplit(x, "_", fill = "0")]
+a[]
+```
+
+
+### rbindlist
+
+リストに保持された複数のデータテーブルをひとつにまとめたものを
+作成する. 
+
+```{r}
+DT1 = data.table(A=1:3,B=letters[1:3])
+DT2 = data.table(A=4:5,B=letters[4:5])
+l = list(DT1,DT2)
+rbindlist(l)
+```
+
+
+カラム名が異なっていても，引数で調整することが可能．
+
+```{r}
+DT1 = data.table(A=1:3,B=letters[1:3])
+DT2 = data.table(B=letters[4:5],C=factor(1:2))
+l = list(DT1,DT2)
+rbindlist(l, use.names=TRUE, fill=TRUE)
+```
+### set
+
+行と列を指定して，値を設定する関数. 
+行ごとに値を設定する処理の時に有効にみえる．
+ただし，基本的に行単位で値を繰り返し設定することは
+稀であるので，あまり気にしなくても良い気がする. 
+
+```{r}
+m = matrix(1, nrow = 2e6L, ncol = 100L)
+DF = as.data.frame(m)
+DT = as.data.table(m)
+```
+
+```{r}
+bench::mark(
+  system.time(for (i in 1:1000) DF[i, 1] = i), 
+  system.time(for (i in 1:1000) DT[i, V1 := i]), 
+  system.time(for (i in 1:1000) set(DT, i, 1L, i)), 
+  check = FALSE
+)
+```
+
+
+### nafill
+
+```{r}
+x = 1:10
+x[c(1:2, 5:6, 9:10)] = NA
+nafill(x, "locf")
+
+```
+
+```{r}
+dt = data.table(v1=x, v2=shift(x)/2, v3=shift(x, -1L)/2)
+nafill(dt, "nocb")
+```
+
+```{r}
+setnafill(dt, "locf", cols=c("v2","v3"))
+dt
+
+
+```
+
+
+
+### between
+
+```{r}
+1:10 %between% c(0, 5)
+```
+
+```{r}
+1:10 %inrange% c(0, 5)
+```
+
+
+### cube/rollup
+
+あんましわかっていないけど，
+これらの関数を使うとaggregateが明示的に行えるようになる．
+これを使えば，・・・？ポスグレなどとの対応がわかりやすくなる. 
+
+
+
+```{r}
+
+n = 24L
+set.seed(25)
+DT <- data.table(
+    color  = sample(c("green","yellow","red"), n, TRUE),
+    year   = as.Date(sample(paste0(2011:2015,"-01-01"), n, TRUE)),
+    status = as.factor(sample(c("removed","active","inactive","archived"), n, TRUE)),
+    amount = sample(1:5, n, TRUE),
+    value  = sample(c(3, 3.5, 2.5, 2), n, TRUE)
+)
+DT[1:10]
+```
+
+
+
+```{r}
+# rollup
+rollup(DT, j = sum(value), by = c("color","year","status")) # default id=FALSE
+```
+
+```{r}
+rollup(DT, j = sum(value), by = c("color","year","status"), id=TRUE)
+```
+
+
+```{r}
+rollup(DT, j = lapply(.SD, sum), by = c("color","year","status"), id=TRUE, .SDcols="value")
+```
+
+```{r}
+cube(DT, j = sum(value), by = c("color","year","status"), id=TRUE)
+```
+
+```{r}
+cube(DT, j = lapply(.SD, sum), by = c("color","year","status"), id=TRUE, .SDcols="value")
+```
+
+```{r}
+dt = data.table(
+  x = 1:10, 
+  y = rep(c("a", "b"), each = 5)
+)
+
+cube(dt, .(n = .N), by = "y", id = TRUE)
+```
+
+
+```{r}
+groupingsets(
+  DT, 
+  j = c(list(count=.N), lapply(.SD, sum)), 
+  by = c("color","year","status"),
+  # setsはidをまとめるもので，今回の場合にはyear, statusがニコイチになる
+  sets = list("color", c("year","status"), character()), 
+  id=TRUE)
+```
+
+
+
+
+
+### chmatch
+
+高速な文字列マッチング. らしいけど，この例ではそこまで差がないもよう. 
+
+```{r}
+
+N = 1e6
+# N is set small here (1e5) to reduce runtime because every day CRAN runs and checks
+# all documentation examples in addition to the package's test suite.
+# The comments here apply when N has been changed to 1e8 and were run on 2018-05-13
+# with R 3.5.0 and data.table 1.11.2.
+
+u = as.character(as.hexmode(1:10000))
+y = sample(u,N,replace=TRUE)
+x = sample(u)
+                                           #  With N=1e8 ...
+system.time(a <- match(x,y))               #  4.6s
+system.time(b <- chmatch(x,y))             #  1.8s
+identical(a,b)
+
+system.time(a <- x %in% y)               #  4.5s
+system.time(b <- x %chin% y)             #  1.7s
+identical(a,b)
+
+# Different example with more unique strings ...
+u = as.character(as.hexmode(1:(N/10)))
+y = sample(u,N,replace=TRUE)
+x = sample(u,N,replace=TRUE)
+system.time(a <- match(x,y))               # 46s
+system.time(b <- chmatch(x,y))             # 16s
+identical(a,b)
+
+```
+
+
+
+
+
+
+
+
+
