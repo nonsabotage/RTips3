@@ -18,6 +18,7 @@ Rのパッケージに関するノート.
 - [rayshader](./rayshader/rayshader.html)
 - [rlang](./rlang/rlang.html)
 - [stringr](./stringr/stringr.html)
+- [units](./units/README.html)
 - [vsdat](./vsdat/README.html)
 - [vroom](./vroom/vroom.html)
 
