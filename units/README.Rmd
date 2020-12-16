@@ -1,0 +1,247 @@
+---
+title: "package : units"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        highlight: tango
+        theme: flatly
+        css: mycss-best.css
+        code_folding: show
+        include:
+            - in_header: in_head.html
+        df_print: "paged"
+        number_section: true
+---
+
+
+
+```{r setup, include=FALSE}
+target_libs <- c("tidyverse", "units")
+for (lib in target_libs) {
+    if (!require(lib, character.only = TRUE)) {
+        try({
+          install.packages(lib); 
+          library(lib, character.only = TRUE)})
+    }
+}
+
+```
+
+# はじめに
+
+`units`により，ベクトルやマトリックス，アレイを単位込みで
+処理することが可能となる．
+
+# [Measurement Units for R](https://r-quantities.github.io/units/)
+
+## What it does
+
+```{r}
+print((spd1 = set_units(1:5, m/s)))
+
+print((spd2 = set_units(1:5, km/s)))
+
+# kを1000だと自動で解釈をしてくれる
+print(spd1 + spd2)
+```
+
+```{r}
+print(spd1 * spd2)
+
+print(spd1 * set_units(10, s))
+
+```
+
+```{r}
+# 単位が異なるので演算はできない
+tryCatch({
+  spd1 + set_units(10, s)
+}, 
+  error = function (e)  print(e)
+)
+```
+
+# [Units of Measurement for Rvectors](https://r-quantities.github.io/units/articles/units.html)
+
+
+Rは物理的な測定単位のサポートはわずかである．
+例外は時間差のクラスである．
+
+```{r}
+t1 = Sys.time()
+t2 = t1 + 3600
+d = t2 - t1
+class(d)
+## [1] "difftime"
+units(d)
+## [1] "hours"
+d
+## Time difference of 1 hours
+units(d) = "secs"
+d
+## Time difference of 3600 secs
+```
+
+`units`パッケージは`udunits`をRで使いやすいように
+拡張したもの．
+
+## Setting units , unis conversion
+
+```{r}
+# 使える単位一覧
+ud_units
+```
+
+
+```{r}
+print(ud_units[1:5])
+```
+
+
+
+`set_units`を使うことで数値に単位を設定することが
+可能である. 
+
+```{r}
+(a <- set_units(runif(10), m/s))
+```
+
+```{r warning=FALSE}
+with(ud_units, {km/h})
+```
+
+
+## unit conversion
+
+単位を設定しなおすことで単位の変換が可能である．
+例えば，時間を秒に，キロメータをメータにするなどがある. 
+
+```{r warning=FALSE}
+b <- a
+units(b) <- with(ud_units, km/h)
+b
+```
+
+## Basic manipulations
+
+### Arithmetic operations
+
+```{r}
+a + a
+```
+
+
+
+```{r}
+a * a
+```
+
+```{r}
+a ** 2
+```
+
+```{r}
+a ** -2
+```
+
+```{r}
+a + b
+```
+
+
+
+### Unit simplification
+
+```{r warning=FALSE}
+t <- with(ud_units, s)
+a * t
+```
+
+
+```{r warning=FALSE}
+# 時間の単位を変えてても簡単に計算が行える
+t <- with(ud_units, min)
+a * t
+```
+
+
+演算により単位がなくなる場合には，`[1]`が単位として
+表示される. 
+
+
+```{r warning=FALSE}
+m <- with(ud_units, m)
+a * t / m
+```
+
+
+### Mathmatical functions
+
+abs, sign, floor, ceiling, trunc, round, signif, log, cumsum, cummax, cumminが使える.
+
+```{r}
+# 数値のラウンド
+signif(a**2/3, 3)
+```
+
+```{r}
+print(cumsum(a))
+print(log(a))
+print(log(a, base = 10))
+print(log(a, base = 2))
+```
+
+
+
+### Sumary functions
+
+```{r warning=FALSE}
+print(sum(a))
+print(min(a))
+print(range(a))
+print(with(ud_units, min(m/s, km/h)))
+```
+
+
+### Concatenation
+
+```{r}
+c(a, a)
+```
+
+
+## Conversion to/from difftime
+
+```{r}
+t1 = Sys.time()
+t2 = t1 + 3600
+d = t2 - t1
+(du = as_units(d))
+## 1 [h]
+```
+
+```{r}
+(dt = as_difftime(du))
+## Time difference of 1 hours
+class(dt)
+## [1] "difftime"
+```
+
+## Plotting
+
+
+```{r warning=FALSE}
+mar = par("mar") + c(0, .3, 0, 0)
+displacement = mtcars$disp * ud_units[["in"]]^3
+units(displacement) = with(ud_units, cm^3)
+weight = mtcars$wt * 1000 * with(ud_units, lb)
+units(weight) = with(ud_units, kg)
+par(mar = mar)
+plot(weight, displacement)
+```
+
+他にも色々あるので，
+調べたいときにはここを使うこと.
+
+
