@@ -12,9 +12,10 @@ output:
             - in_header: in_head.html
         df_print: "paged"
         number_section: true
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
-
-
 
 ```{r setup, include=FALSE}
 target_libs <- c("tidyverse", "palmerpenguins")
@@ -26,12 +27,12 @@ for (lib in target_libs) {
 
 ```
 
-
-# Original Tips
+# Useful Tips
 
 ## across
-acrossを使うことによりselectの構文がsummariseやmutateで用いることができる. 
-これにより，特定のカラムを選択，あるいは，除去した上で関数を当てることができる. 
+
+acrossを使うことによりselectの構文がsummariseやmutateで用いることができる.
+これにより，特定のカラムを選択，あるいは，除去した上で関数を当てることができる.
 これにより，mutate_if, summarise_if,などは必要なくなるというイメージで良いのかな?
 
 ```{r}
@@ -40,8 +41,29 @@ penguins %>%
   summarise(across(where(is.numeric), mean, na.rm = TRUE))
 ```
 
-関数はlistに入れることで複数当てることができる. 
-またこのとき，名前をカラムや関数名を使い指定することができる. 
+```{r}
+a <- "bill_length_mm"
+penguins %>%
+  group_by(species) %>%
+  summarise(across(!!a, mean, na.rm = TRUE))
+```
+
+```{r}
+a <- c("bill_length_mm", "bill_depth_mm")
+penguins %>%
+  group_by(species) %>%
+  summarise(across(all_of(a), mean, na.rm = TRUE))
+```
+
+```{r}
+a <- c("bill_length_mm", "bill_depth_mm")
+penguins %>%
+  group_by(species) %>%
+  summarise(across(all_of(a), mean, na.rm = TRUE))
+```
+
+関数はlistに入れることで複数当てることができる.
+またこのとき，名前をカラムや関数名を使い指定することができる.
 
 ```{r}
 penguins %>% 
@@ -50,17 +72,16 @@ penguins %>%
   summarise(across(ends_with("_mm"), list(men = mean, med = median), na.rm = TRUE, .names = "{.col}_{.fn}"))
 ```
 
-purrrのような構文も使える. 
+purrrのような構文も使える.
 
 ```{r}
 penguins %>% 
   mutate(across(ends_with("_mm"), ~ .x * 1000))
 ```
 
-
 ## c_across
 
-`rowwise`の場合に扱うことが可能である. 
+`rowwise`の場合に扱うことが可能である.
 使いどころ
 
 ```{r}
@@ -72,31 +93,26 @@ penguins %>%
   )
 ```
 
-
 ## Context dependent expressions
 
-- n() gives the current group size.
-- cur_data() gives the current data for the current group (excluding grouping variables).
-- cur_data_all() gives the current data for the current group (including grouping variables)
-- cur_group() gives the group keys, a tibble with one row and one column for each grouping variable.
-- cur_group_id() gives a unique numeric identifier for the current group.
-- cur_group_rows() gives the row indices for the current group.
-- cur_column() gives the name of the current column (in across() only).
+-   n() gives the current group size.
+-   cur_data() gives the current data for the current group (excluding grouping variables).
+-   cur_data_all() gives the current data for the current group (including grouping variables)
+-   cur_group() gives the group keys, a tibble with one row and one column for each grouping variable.
+-   cur_group_id() gives a unique numeric identifier for the current group.
+-   cur_group_rows() gives the row indices for the current group.
+-   cur_column() gives the name of the current column (in across() only).
 
 data.table de
 
-
-cur_data() <-> .SD
-cur_group_id() <-> .GRP
-cur_group() <-> .BY
-cur_group_rows() <-> .I
-
+cur_data() \<-\> .SD cur_group_id() \<-\> .GRP cur_group() \<-\> .BY cur_group_rows() \<-\> .I
 
 ```{r}
 penguins %>% 
   group_by(species) %>% 
   summarise(n())
 ```
+
 ```{r}
 tmp <- 
   penguins %>% 
@@ -115,9 +131,6 @@ tmp <-
 tmp$a[[1]]
 ```
 
-
-
-
 ```{r}
 tmp <- 
   penguins %>% 
@@ -126,8 +139,6 @@ tmp <-
 
 tmp$a[[1]]
 ```
-
-
 
 ```{r}
 tmp <- 
@@ -138,10 +149,6 @@ tmp <-
 tmp$a[[1]]
 ```
 
-
-
-
-
 ```{r}
 tmp <- 
   penguins %>% 
@@ -150,8 +157,6 @@ tmp <-
 
 tmp$a[[1]]
 ```
-
-
 
 ```{r}
 # across only
@@ -164,4 +169,50 @@ tmp
 
 ```
 
+## if_all/if_any
 
+-   1.0.4以降で使える.
+-   複数列を対象としたフィルターで，acrossより高速である.
+-   dplyr verbsの文脈でのみ使える
+
+```{r}
+# 平均値以上かどうかでフラグを作成
+big <- function (x) {
+  x > mean(x, na.rm = TRUE)
+}
+
+# フィルターをかける
+penguins %>% 
+  filter(if_all(contains("bill"), big))
+```
+
+```{r}
+# 1つでもNAを含む
+penguins %>%
+  filter(if_any(everything(), is.na))
+```
+
+-   次のような面白い処理が行える。（`@Romain Francois`)
+
+```{r}
+penguins %>%
+  filter(!is.na(bill_length_mm)) %>%
+  mutate(
+    category = case_when(
+      if_all(contains("bill"), big) ~ "both big", 
+      if_any(contains("bill"), big) ~ "one big", 
+      TRUE                          ~ "small"
+    )
+  ) %>%
+  count(category)
+```
+
+| Col1 | Col2 | Col3 |
+|:----:|:----:|:----:|
+|      |      |      |
+|      |      |      |
+|      |      |      |
+
+: this is a caption of above table
+
+これがVisual modeなのか・・・すごい\
